@@ -1,5 +1,7 @@
 const ZOMBI = (() => {
 
+    const Z = this;
+
     var seq = 0;
 
     var radio_stations = [];
@@ -11,6 +13,12 @@ const ZOMBI = (() => {
     var io_callbacks = {};
 
     var state_data = {};
+
+    _local_storage = (key, value) => {
+        if(typeof value === "undefined") { return localStorage.getItem(key); }
+        else if(value === null) { localStorage.removeItem(key); }
+        else { localStorage.setItem(key, value); }
+    };
 
     return {
 
@@ -34,7 +42,7 @@ const ZOMBI = (() => {
         
         },
 
-        _get_log() {
+        get_log() {
 
             return console_log_keep_data;
 
@@ -52,29 +60,27 @@ const ZOMBI = (() => {
                 
         },
 
-        token(token) {
-            if(typeof token === "undefined") { return localStorage.getItem("zombi_token"); }
-            else if(token === null) { localStorage.removeItem("zombi_token"); }
-            else { localStorage.setItem("zombi_token", token); }
+        make_token_shorter (token) { 
+    
+            if(!!token) {
+        
+                return token.substr(0, 10) + "..." + token.substr(-10); 
+        
+            } else {
+        
+                return "none";
+        
+            }
+        
         },
 
-        fullname(fullname) {
-            if(typeof fullname === "undefined") { return localStorage.getItem("zombi_fullname"); }
-            else if(fullname === null) { localStorage.removeItem("zombi_fullname"); }
-            else { localStorage.setItem("zombi_fullname", fullname); }
-        },
+        token(token) { return Z._local_storage("zombi_token", token) },
 
-        timezone(tz) {
-            if(typeof tz === "undefined") { return localStorage.getItem("zombi_timezone"); }
-            else if(tz === null) { localStorage.removeItem("zombi_timezone"); }
-            else { localStorage.setItem("zombi_timezone", tz); }
-        },
+        fullname(fullname) { return Z._local_storage("zombi_fullname", fullname) },
 
-        language(lang) {
-            if(typeof lang === "undefined") { return localStorage.getItem("zombi_language"); }
-            else if(lang === null) { localStorage.removeItem("zombi_language"); }
-            else { localStorage.setItem("zombi_language", lang); }
-        },
+        timezone(tz) { return Z._local_storage("zombi_timezone", tz) },
+
+        language(lang) { return Z._local_storage("zombi_language", lang) },
 
         state: {
 
@@ -213,14 +219,14 @@ const ZOMBI = (() => {
 
                 const base = {
                     token: ZOMBI.token(),
-                    module: "",
-                    function: "",
+                    mod: "",
+                    fun: "",
                     args: {},
                     config: {},
                     sequence: ZOMBI.sequence()
                 };
     
-                const smarap = (ZOMBI.utils.is_array(params)) ? {module: params[0], function: params[1], args: params[2]} : params; 
+                const smarap = (ZOMBI.utils.is_array(params)) ? {mod: params[0], fun: params[1], args: params[2]} : params; 
                 
                 const merged = ZOMBI.utils.extend(true, base, smarap);
     
@@ -270,18 +276,18 @@ const ZOMBI = (() => {
 
             const base = {
                 token: ZOMBI.token(),
-                module: "",
-                function: "",
+                mod: "",
+                fun: "",
                 args: {},
                 config: {},
                 sequence: ZOMBI.sequence()
             };
 
-            const smarap = (ZOMBI.utils.is_array(params)) ? {module: params[0], function: params[1], args: params[2]} : params; 
+            const smarap = (ZOMBI.utils.is_array(params)) ? {mod: params[0], fun: params[1], args: params[2]} : params; 
             
             const merged = ZOMBI.utils.extend(true, base, smarap);
 
-            ZOMBI.radio.emit("ZOMBI_SERVER_CALL_START", [merged.module, merged.function]);
+            ZOMBI.radio.emit("ZOMBI_SERVER_CALL_START", [merged.mod, merged.fun]);
 
             axios({
                 method: 'post',
@@ -290,7 +296,7 @@ const ZOMBI = (() => {
                 responseType: 'json',
                 responseEncoding: 'utf8',
                 headers: {'Content-Type': 'application/json'},
-                validateStatus: (status) => { return true; } // Zombi doesn't care about HTTP codes that much
+                validateStatus: () => { return true; } // Zombi doesn't care about HTTP codes that much
             }).then((response) => {
 
                 if(
@@ -336,7 +342,7 @@ const ZOMBI = (() => {
                 
             }).then(() => { // This extra .then() works the same way as jquery's "always"
                 
-                ZOMBI.radio.emit("ZOMBI_SERVER_CALL_FINISH", [merged.module, merged.function]);
+                ZOMBI.radio.emit("ZOMBI_SERVER_CALL_FINISH", [merged.mod, merged.fun]);
 
             });
 

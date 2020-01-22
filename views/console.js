@@ -104,7 +104,7 @@ $(() => {
         if(console_module_element.value !== "") {
 
             ZOMBI.server(
-                {module: "sys_console", function: "funs", args: console_module_element.value},
+                {mod: "sys_console", fun: "funs", args: console_module_element.value},
 
                 (error, response) => {
 
