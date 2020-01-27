@@ -22,11 +22,9 @@
 
         ZOMBI.server(
             ["sys_sessions", "sessions_table_data"],
-            (error, response) => {
-                if(error) {
-
-                    alert(error);
-                } else {
+            response => {
+                if(response.error) { INDEX.flash(response.message); }
+                else {
                     const data = response.data;
 
                     const html = table_html(data);
@@ -38,8 +36,6 @@
                 }
             }    
         );
-
-
     };
 
     populate_table();

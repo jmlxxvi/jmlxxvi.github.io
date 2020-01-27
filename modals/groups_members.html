@@ -58,39 +58,33 @@
                 ZOMBI.server(
                     ["sys_groups", "groups_users_shift_to_group", group_id],
         
-                    (error, response) => {
+                    response => {
         
-                        if(error) { INDEX.flash(INDEX.i18n.label("SERVER_ERROR")); } 
-                        
-                        else {
-        
-                            if(response.error) { INDEX.flash(response.message); } 
+                        if(response.error) { INDEX.flash(response.message); } 
                             
-                            else {
-        
-                                const out_group = response.data[0];
-                                const in_group = response.data[1];
+                        else {
+    
+                            const out_group = response.data[0];
+                            const in_group = response.data[1];
 
-                                out_group.unshift([-1, INDEX.i18n.label("SELECT_A_USER")]);
+                            out_group.unshift([-1, INDEX.i18n.label("SELECT_A_USER")]);
 
-                                s2 = out_group.map(function(x) {
-                                    return {id: x[0], text: x[1]};
-                                });
+                            s2 = out_group.map(function(x) {
+                                return {id: x[0], text: x[1]};
+                            });
 
-                                $("#groups_members_member_name").empty();
+                            $("#groups_members_member_name").empty();
 
-                                // TODO check if there is a way to update the component without recreating it as it flashes when selecting
-                                $("#groups_members_member_name").select2({
-                                    width: 'style',
-                                    dropdownParent: $("#groups_members_member_name").parent(),
-                                    theme: "bootstrap4",
-                                    data: s2
-                                });
+                            // TODO check if there is a way to update the component without recreating it as it flashes when selecting
+                            $("#groups_members_member_name").select2({
+                                width: 'style',
+                                dropdownParent: $("#groups_members_member_name").parent(),
+                                theme: "bootstrap4",
+                                data: s2
+                            });
 
-                                groups_members_generate_table(in_group);
-        
-                            }
-                        
+                            groups_members_generate_table(in_group);
+    
                         }
                     
                     }
@@ -104,8 +98,6 @@
 
             $('#groups_members_member_name').on("select2:selecting", function(e) { 
 
-                console.log(e.params.args.data);
-                
                 const user_id = e.params.args.data.id;
                 
                 const user_name = e.params.args.data.text;
@@ -113,20 +105,14 @@
                 ZOMBI.server(
                     ["sys_groups", "groups_add_user_to_group", [group_id, user_id]],
         
-                    (error, response) => {
+                    response => {
         
-                        if(error) { INDEX.flash(INDEX.i18n.label("SERVER_ERROR")); } 
-                        
-                        else {
-        
-                            if(response.error) { INDEX.flash(response.message); } 
+                        if(response.error) { INDEX.flash(response.message); } 
                             
-                            else {
-        
-                                groups_members_show_user_select(group_id);
-        
-                            }
-                        
+                        else {
+    
+                            groups_members_show_user_select(group_id);
+    
                         }
                     
                     }
@@ -147,20 +133,14 @@
                 ZOMBI.server(
                     ["sys_groups", "groups_remove_user_from_group", [group_id, user_id]],
         
-                    (error, response) => {
+                    response => {
         
-                        if(error) { INDEX.flash(INDEX.i18n.label("SERVER_ERROR")); } 
-                        
-                        else {
-        
-                            if(response.error) { INDEX.flash(response.message); } 
+                        if(response.error) { INDEX.flash(response.message); } 
                             
-                            else {
-        
-                                groups_members_show_user_select(group_id);
-        
-                            }
-                        
+                        else {
+    
+                            groups_members_show_user_select(group_id);
+    
                         }
                     
                     }

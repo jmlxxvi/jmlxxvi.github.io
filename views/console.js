@@ -43,45 +43,40 @@ $(() => {
     };
 
     ZOMBI.server(
+
         ["sys_console", "mods"],
 
-        (error, response) => {
+        response => {
 
-            if(error) { INDEX.flash(error); } 
-
+            if(response.error) { INDEX.flash(response.message); }
+                        
             else {
 
-                if(response.error) { INDEX.flash(response.message); }
-                        
-                else {
+                const console_function = document.getElementById("console_function");
 
-                    const console_function = document.getElementById("console_function");
+                console_function.innerHTML = "";
 
-                    console_function.innerHTML = "";
-    
-                    const console_module = document.getElementById("console_module");
-    
-                    console_module.innerHTML = "";
-    
-                    const modules = response.data;
-    
-                    const default_option = document.createElement('option');
-    
-                    default_option.value = "";
-                    default_option.text  = "-";
-    
-                    console_module.add(default_option);
-    
-                    for (const s of modules) {
-    
-                        const option = document.createElement('option');
-                        
-                        option.value = s;
-                        option.text  = s;
-    
-                        console_module.add(option);
-    
-                    }
+                const console_module = document.getElementById("console_module");
+
+                console_module.innerHTML = "";
+
+                const modules = response.data;
+
+                const default_option = document.createElement('option');
+
+                default_option.value = "";
+                default_option.text  = "-";
+
+                console_module.add(default_option);
+
+                for (const s of modules) {
+
+                    const option = document.createElement('option');
+                    
+                    option.value = s;
+                    option.text  = s;
+
+                    console_module.add(option);
 
                 }
 
@@ -104,41 +99,38 @@ $(() => {
         if(console_module_element.value !== "") {
 
             ZOMBI.server(
-                {mod: "sys_console", fun: "funs", args: console_module_element.value},
+                
+                {
+                    mod: "sys_console", 
+                    fun: "funs", 
+                    args: console_module_element.value
+                },
 
-                (error, response) => {
+                response => {
 
-                    if(error) {
-
-                        INDEX.flash(error);
-
-                    } else {
-
-                        if(response.error) { INDEX.flash(response.message); }
+                    if(response.error) { INDEX.flash(response.message); }
                         
-                        else {
+                    else {
 
-                            const functions = response.data;
+                        const functions = response.data;
 
-                            let first = true;
-    
-                            for (const s of functions) {
-    
-                                const option = document.createElement('option');
-                                
-                                option.value = s;
-                                option.text  = s;
-    
-                                console_function_element.add(option);
-    
-                                if(first) {
-    
-                                    first = false;
-    
-                                    console_function_comments(console_module_element.value, s);
-    
-                                }
-    
+                        let first = true;
+
+                        for (const s of functions) {
+
+                            const option = document.createElement('option');
+                            
+                            option.value = s;
+                            option.text  = s;
+
+                            console_function_element.add(option);
+
+                            if(first) {
+
+                                first = false;
+
+                                console_function_comments(console_module_element.value, s);
+
                             }
 
                         }
@@ -169,29 +161,21 @@ $(() => {
                 
             ["sys_console", "coms", [mod, fun]],
 
-            (error, response) => {
+            response => {
 
-                if(error) {
+                if(response.error) {
 
-                    INDEX.flash(error, "error");
+                    INDEX.flash(response.message);
 
                 } else {
 
-                    if(response.error) {
+                    if(response.data.length === 0) {
 
-                        INDEX.flash(response.message);
-
+                        document.getElementById("console_function_details_data").innerHTML = "";
+                        
                     } else {
 
-                        if(response.data.length === 0) {
-
-                            document.getElementById("console_function_details_data").innerHTML = "";
-                            
-                        } else {
-
-                            document.getElementById("console_function_details_data").innerHTML = INDEX.utils.escape_for_html(response.data);
-
-                        }
+                        document.getElementById("console_function_details_data").innerHTML = INDEX.utils.escape_for_html(response.data);
 
                     }
 
@@ -227,23 +211,9 @@ $(() => {
                     
                     [mod, fun, sgra],
 
-                    (error, response) => {
+                    response => {
 
-                        
-
-                        if(error) {
-
-                            // INDEX.flash(error);
-                            console_show_response(error);
-
-                        } else {
-
-                            console_show_response(response);
-
-                            // if(response.error) { INDEX.flash(response.message); }
-                            // else { console_show_response(response); }
-
-                        }
+                        console_show_response(response);
 
                     }
 

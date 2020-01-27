@@ -125,26 +125,18 @@
                 ZOMBI.server(
                     ["sys_labels", "labels_add", [name.toUpperCase(), es, pt, en, fr, de, it, ko, ja, he, ru ,zh, details]],
 
-                    (error, response) => {
+                    response => {
 
-                        if(error) {
+                        if(response.error) {
 
-                            INDEX.flash(INDEX.i18n.label("SERVER_ERROR"));
-
+                            INDEX.flash(response.message);
+        
                         } else {
 
-                            if(response.error) {
+                            INDEX.close_modal();
 
-                                INDEX.flash(response.message);
-            
-                            } else {
-
-                                INDEX.close_modal();
-
-                                INDEX.datatables.refresh("labels_table");
-            
-                            }
-                        
+                            INDEX.datatables.refresh("labels_table");
+        
                         }
                     
                     }
