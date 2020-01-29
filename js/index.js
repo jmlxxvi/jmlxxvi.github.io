@@ -129,20 +129,39 @@ const INDEX = (() => {
 
             },
 
+            inform_usage(label) {
+
+                ZOMBI.server(
+                    ["sys_labels", "inform_usage", label],
+                    response => {
+                        if(response.error) {
+                            ZOMBI.log(response.message, "I18N");
+                        }
+                    }
+                );
+
+            },
+
             label(name, replace, transform) {
 
-                var i, repl;
+                let i, repl;
 
                 if(ZOMBI.utils.is_empty(replace)) { repl = []; } 
                 else { repl = (ZOMBI.utils.is_array(replace)) ? replace : [replace]; }
 
-                var replace_members = repl.length;
+                const replace_members = repl.length;
 
-                var label;
+                let label;
 
                 if(i18n_data && i18n_data[name]) {
 
                     label = i18n_data[name];
+
+                    if (ZOMBI.config("I18N_INFORM_USAGE")) {
+
+                        INDEX.i18n.inform_usage(label);
+
+                    }
 
                     for (i = 1; i <= replace_members; i++) {
 
@@ -182,6 +201,12 @@ const INDEX = (() => {
                     if($(this).data("i18n")) {
                         
                         $(this).html(INDEX.i18n.label($(this).data("i18n")));
+
+                        if (ZOMBI.config("I18N_INFORM_USAGE")) {
+
+                            INDEX.i18n.inform_usage($(this).data("i18n"));
+
+                        }
                         
                     }
 

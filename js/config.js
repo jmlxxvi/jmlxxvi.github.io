@@ -7,6 +7,7 @@ var zombiConfig = {
     "SOCKETS_RECCONNECT_TIME": 2000,
     "SOCKETS_CONNECT_ENABLED": true,
     "CONSOLE_LOG_KEEP_ENABLED": true,
-    "CONSOLE_LOG_KEEP_MAX_SIZE": 200
+    "CONSOLE_LOG_KEEP_MAX_SIZE": 200,
+    "I18N_INFORM_USAGE": false // You should know what you are doing to change this
 };
 
