@@ -48,8 +48,8 @@ $(() => {
 
         response => {
 
-            if(response.error) { INDEX.flash(response.message); }
-                        
+            if (response.error) { INDEX.flash(response.message); }
+
             else {
 
                 const console_function = document.getElementById("console_function");
@@ -65,23 +65,23 @@ $(() => {
                 const default_option = document.createElement('option');
 
                 default_option.value = "";
-                default_option.text  = "-";
+                default_option.text = "-";
 
                 console_module.add(default_option);
 
                 for (const s of modules) {
 
                     const option = document.createElement('option');
-                    
+
                     option.value = s;
-                    option.text  = s;
+                    option.text = s;
 
                     console_module.add(option);
 
                 }
 
             }
-            
+
         }
 
     );
@@ -96,42 +96,44 @@ $(() => {
 
         console_function_element.innerHTML = "";
 
-        if(console_module_element.value !== "") {
+        if (console_module_element.value !== "") {
+
+            console_module_comments(console_module_element.value);
 
             ZOMBI.server(
-                
+
                 {
-                    mod: "sys_console", 
-                    fun: "funs", 
+                    mod: "sys_console",
+                    fun: "funs",
                     args: console_module_element.value
                 },
 
                 response => {
 
-                    if(response.error) { INDEX.flash(response.message); }
-                        
+                    if (response.error) { INDEX.flash(response.message); }
+
                     else {
 
                         const functions = response.data;
 
-                        let first = true;
+                        // let first = true;
 
                         for (const s of functions) {
 
                             const option = document.createElement('option');
-                            
+
                             option.value = s;
-                            option.text  = s;
+                            option.text = s;
 
                             console_function_element.add(option);
 
-                            if(first) {
+                            // if(first) {
 
-                                first = false;
+                            //     first = false;
 
-                                console_function_comments(console_module_element.value, s);
+                            //     console_function_comments(console_module_element.value, s);
 
-                            }
+                            // }
 
                         }
 
@@ -142,7 +144,7 @@ $(() => {
             );
 
         }
-        
+
     });
 
     const console_function_element = document.getElementById("console_function");
@@ -152,30 +154,49 @@ $(() => {
         console_delete_response();
 
         console_function_comments(console_module_element.value, console_function_element.value);
-        
+
     });
 
-    const console_function_comments = (mod, fun) => {
+    const console_module_comments = mod => {
 
         ZOMBI.server(
-                
-            ["sys_console", "coms", [mod, fun]],
+
+            ["sys_console", "coms", mod],
 
             response => {
 
-                if(response.error) {
+                if (response.error) {
 
                     INDEX.flash(response.message);
 
                 } else {
 
-                    if(response.data.length === 0) {
+                    if (response.data.length === 0) {
 
-                        document.getElementById("console_function_details_data").innerHTML = "";
-                        
+                        document.getElementById("console_function_details").innerHTML = "";
+
                     } else {
 
-                        document.getElementById("console_function_details_data").innerHTML = INDEX.utils.escape_for_html(response.data);
+                        const md = window.markdownit({
+                            highlight: function (str, lang) {
+                                if (lang && hljs.getLanguage(lang)) {
+                                    try {
+                                        return '<pre class="hljs"><code>' +
+                                            hljs.highlight(lang, str, true).value +
+                                            '</code></pre>';
+                                    } catch (__) { }
+                                }
+
+                                return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+                            },
+                            html: true,
+                            linkify: false,
+                            typographer: true
+                        });
+
+                        const result = md.render(response.data);
+
+                        document.getElementById("console_function_details").innerHTML = result;
 
                     }
 
@@ -187,19 +208,60 @@ $(() => {
 
     }
 
-    document.getElementById("submit_buttton").addEventListener("click", function(event)  {
+    const console_function_comments = (mod, fun) => {
+
+        ZOMBI.server(
+
+            ["sys_console", "coms", [mod, fun]],
+
+            response => {
+
+                if (response.error) {
+
+                    INDEX.flash(response.message);
+
+                } else {
+
+                    if (response.data.length === 0) {
+
+                        document.getElementById("console_function_details_data").innerHTML = "";
+
+                    } else {
+
+                        var md = window.markdownit({
+                            html: true,
+                            linkify: true,
+                            typographer: true
+                        });
+                        var result = md.render(response.data);
+
+                        // document.getElementById("console_function_details_data").innerHTML = INDEX.utils.escape_for_html(response.data);
+
+                        document.getElementById("console_function_details_data").innerHTML = result;
+
+                    }
+
+                }
+
+            }
+
+        );
+
+    }
+
+    document.getElementById("submit_buttton").addEventListener("click", function (event) {
 
         event.preventDefault();
 
         try {
 
-            const mod  = document.getElementById("console_module").value;
-            const fun  = document.getElementById("console_function").value;
+            const mod = document.getElementById("console_module").value;
+            const fun = document.getElementById("console_function").value;
             const args = document.getElementById("console_arguments").value;
 
             const console_raw_json_checked = document.getElementById("console_raw_json").checked;
 
-            if(mod === "" || fun === "") {
+            if (mod === "" || fun === "") {
 
                 INDEX.flash(INDEX.i18n.label("SELECT_A_MODULE_AND_A_FUNCTION"));
 
@@ -208,7 +270,7 @@ $(() => {
                 const sgra = (console_raw_json_checked) ? JSON.parse(args) : (args.split('\n').length === 1) ? args : args.split('\n');
 
                 const request = ZOMBI.server(
-                    
+
                     [mod, fun, sgra],
 
                     response => {
@@ -220,15 +282,15 @@ $(() => {
                 );
 
                 console_show_request(request);
-                
+
             }
 
-        } catch(err) {
+        } catch (err) {
 
             INDEX.flash(err.message, "error", "JSON");
 
         }
-        
+
     }, false);
 
 });

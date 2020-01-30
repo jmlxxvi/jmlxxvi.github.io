@@ -756,8 +756,6 @@ $(() => {
         "SOCKET_CONNECT_LISTENER_INDEX"
     );
 
-    
-
     // const index_login_18n_languages = [
     //     ["es", "Español"],
     //     ["pt", "Português"],
