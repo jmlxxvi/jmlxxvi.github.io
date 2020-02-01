@@ -4,7 +4,7 @@
 
     const generate_table = () => {
 
-        const data = ZOMBI._get_log();
+        const data = ZOMBI.get_log();
 
         let table_html = "<table class='table'>";
 

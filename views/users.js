@@ -89,17 +89,11 @@ $(() => {
         ZOMBI.server(
             ["sys_users", "users_toggle_admin", parseInt(uid)],
 
-            (error, response) => {
+            response => {
 
-                if(error) { INDEX.flash(INDEX.i18n.label("SERVER_ERROR")); } 
-                
-                else {
-
-                    if(response.error) { INDEX.flash(response.message); } 
+                if(response.error) { INDEX.flash(response.message); } 
                     
-                    else { INDEX.datatables.refresh("users_table"); }
-                
-                }
+                else { INDEX.datatables.refresh("users_table"); }
             
             }
 
@@ -126,7 +120,5 @@ $(() => {
         INDEX.load_modal("users_add");
 
     });
-
-    
 
 });

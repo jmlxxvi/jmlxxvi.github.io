@@ -1,5 +1,7 @@
 const ZOMBI = (() => {
 
+    const me = this;
+
     var seq = 0;
 
     var radio_stations = [];
@@ -7,10 +9,16 @@ const ZOMBI = (() => {
 
     var console_log_keep_data = [];
 
-    var io_client = null;
-    var io_callbacks = {};
+    var ws_client = null;
+    var ws_callbacks = {};
 
     var state_data = {};
+
+    _local_storage = (key, value) => {
+        if(typeof value === "undefined") { return localStorage.getItem(key); }
+        else if(value === null) { localStorage.removeItem(key); }
+        else { localStorage.setItem(key, value); }
+    };
 
     return {
 
@@ -34,7 +42,7 @@ const ZOMBI = (() => {
         
         },
 
-        _get_log() {
+        get_log() {
 
             return console_log_keep_data;
 
@@ -52,29 +60,27 @@ const ZOMBI = (() => {
                 
         },
 
-        token(token) {
-            if(typeof token === "undefined") { return localStorage.getItem("zombi_token"); }
-            else if(token === null) { localStorage.removeItem("zombi_token"); }
-            else { localStorage.setItem("zombi_token", token); }
+        make_token_shorter (token) { 
+    
+            if(!!token) {
+        
+                return token.substr(0, 10) + "..." + token.substr(-10); 
+        
+            } else {
+        
+                return "none";
+        
+            }
+        
         },
 
-        fullname(fullname) {
-            if(typeof fullname === "undefined") { return localStorage.getItem("zombi_fullname"); }
-            else if(fullname === null) { localStorage.removeItem("zombi_fullname"); }
-            else { localStorage.setItem("zombi_fullname", fullname); }
-        },
+        token(token) { return me._local_storage("zombi_token", token) },
 
-        timezone(tz) {
-            if(typeof tz === "undefined") { return localStorage.getItem("zombi_timezone"); }
-            else if(tz === null) { localStorage.removeItem("zombi_timezone"); }
-            else { localStorage.setItem("zombi_timezone", tz); }
-        },
+        fullname(fullname) { return me._local_storage("zombi_fullname", fullname) },
 
-        language(lang) {
-            if(typeof lang === "undefined") { return localStorage.getItem("zombi_language"); }
-            else if(lang === null) { localStorage.removeItem("zombi_language"); }
-            else { localStorage.setItem("zombi_language", lang); }
-        },
+        timezone(tz) { return me._local_storage("zombi_timezone", tz) },
+
+        language(lang) { return me._local_storage("zombi_language", lang) },
 
         state: {
 
@@ -102,9 +108,9 @@ const ZOMBI = (() => {
 
         },
 
-        io: {
+        ws: {
 
-            close() { io_client.close(); },
+            close() { ws_client.close(); },
 
             connect(keep = true) {
 
@@ -114,13 +120,13 @@ const ZOMBI = (() => {
 
                     if(token === null) {
     
-                        ZOMBI.log("Token not set, reconnecting later", "IO");
+                        ZOMBI.log("Token not set, reconnecting later", "SOCKETS");
     
-                        setTimeout(() => { ZOMBI.io.connect(); }, ZOMBI.config("SOCKETS_RECCONNECT_TIME"));
+                        setTimeout(() => { ZOMBI.ws.connect(); }, ZOMBI.config("SOCKETS_RECCONNECT_TIME"));
     
-                    } else if (keep && io_client.readyState && io_client.readyState === 1) {
+                    } else if (keep && ws_client.readyState && ws_client.readyState === 1) {
 
-                        ZOMBI.log("Already connected to server", "IO");
+                        ZOMBI.log("Already connected to server", "SOCKETS");
     
                     } else {
 
@@ -128,45 +134,45 @@ const ZOMBI = (() => {
 
                         const url = `${protocol}//${location.hostname}:${location.port}?token=${ZOMBI.token()}`;
     
-                        ZOMBI.log("Connecting to " + url, "IO");
+                        ZOMBI.log("Connecting to " + url, "SOCKETS");
     
-                        io_client = new WebSocket(url);
+                        ws_client = new WebSocket(url);
     
-                        io_client.onopen = () => {
+                        ws_client.onopen = () => {
 
                             ZOMBI.radio.emit("ZOMBI_SERVER_SOCKET_CONNECTED");
 
-                            ZOMBI.log("Connected", "IO");
+                            ZOMBI.log("Connected", "SOCKETS");
                         
                         };
 
-                        io_client.onclose = event => {
+                        ws_client.onclose = event => {
 
                             ZOMBI.radio.emit("ZOMBI_SERVER_SOCKET_DISCONNECTED");
 
                             const reconnect_time = ZOMBI.config("SOCKETS_RECCONNECT_TIME");
     
-                            ZOMBI.log(`Socket is closed. Reconnect will be attempted in ${reconnect_time} milliseconds: ${event.reason}`, "IO");
+                            ZOMBI.log(`Socket is closed. Reconnect will be attempted in ${reconnect_time} milliseconds: ${event.reason}`, "SOCKETS");
     
-                            setTimeout(() => { ZOMBI.io.connect(); }, reconnect_time);
+                            setTimeout(() => { ZOMBI.ws.connect(); }, reconnect_time);
                 
                         };
 
-                        io_client.onmessage = event => {
+                        ws_client.onmessage = event => {
 
-                            ZOMBI.log("Message: " + event.data, "IO");
+                            ZOMBI.log("Message: " + event.data, "SOCKETS");
     
                             if(event.data.substring(0, 4) === "ping") { // Server sent hertbeat ping
 
-                                if (io_client && io_client.readyState && io_client.readyState === 1) {
+                                if (ws_client && ws_client.readyState && ws_client.readyState === 1) {
 
-                                    ZOMBI.log("Server sent ping, answering with pong", "IO");
+                                    ZOMBI.log("Server sent ping, answering with pong", "SOCKETS");
     
-                                    io_client.send("pong");
+                                    ws_client.send("pong");
 
                                 } else {
 
-                                    ZOMBI.log("Cannot answer ping, not connected", "IO");
+                                    ZOMBI.log("Cannot answer ping, not connected", "SOCKETS");
 
                                 }
 
@@ -178,12 +184,12 @@ const ZOMBI = (() => {
     
                                 if(data.error && data.message) { // Message is a response to a user request because there is no context
             
-                                    if(io_callbacks[data.info.sequence]) {
+                                    if(ws_callbacks[data.info.sequence]) {
 
-                                        io_callbacks[data.info.sequence](data);
+                                        ws_callbacks[data.info.sequence](data);
 
-                                        // TODO this is to prevent io_callbacks to leak. There may be a better solution...
-                                        setTimeout(() => { delete io_callbacks[data.info.sequence]; }, 0);
+                                        // TODO this is to prevent ws_callbacks to leak. There may be a better solution...
+                                        setTimeout(() => { delete ws_callbacks[data.info.sequence]; }, 0);
                                     
                                     }
             
@@ -193,9 +199,9 @@ const ZOMBI = (() => {
     
                         };
 
-                        io_client.onerror = event => {
+                        ws_client.onerror = event => {
 
-                            ZOMBI.log("Connection error", "IO");
+                            ZOMBI.log("Connection error", "SOCKETS");
     
                         };
 
@@ -203,7 +209,7 @@ const ZOMBI = (() => {
 
                 } else {
 
-                    ZOMBI.log("IO: Connection disabled on config", "IO");
+                    ZOMBI.log("IO: Connection disabled on config", "SOCKETS");
 
                 }
 
@@ -211,22 +217,25 @@ const ZOMBI = (() => {
 
             send(params, callback) {
 
+                const token = ZOMBI.token();
+
                 const base = {
-                    token: ZOMBI.token(),
-                    module: "",
-                    function: "",
+                    mod: "",
+                    fun: "",
                     args: {},
                     config: {},
                     sequence: ZOMBI.sequence()
                 };
     
-                const smarap = (ZOMBI.utils.is_array(params)) ? {module: params[0], function: params[1], args: params[2]} : params; 
+                if (token) { base.token = token }; // Token should be an string or not sent at all
+
+                const smarap = (ZOMBI.utils.is_array(params)) ? {mod: params[0], fun: params[1], args: params[2]} : params; 
                 
                 const merged = ZOMBI.utils.extend(true, base, smarap);
     
-                if(typeof callback === "function") { io_callbacks[sequence] = callback; }
+                if(typeof callback === "function") { ws_callbacks[sequence] = callback; }
 
-                io_client.send(JSON.stringify(merged));
+                ws_client.send(JSON.stringify(merged));
 
                 ZOMBI.radio.emit("ZOMBI_SERVER_SOCKET_SEND", merged);
     
@@ -268,20 +277,23 @@ const ZOMBI = (() => {
         
         _exec(params, callback) {
 
+            const token = ZOMBI.token();
+
             const base = {
-                token: ZOMBI.token(),
-                module: "",
-                function: "",
+                mod: "",
+                fun: "",
                 args: {},
                 config: {},
                 sequence: ZOMBI.sequence()
             };
 
-            const smarap = (ZOMBI.utils.is_array(params)) ? {module: params[0], function: params[1], args: params[2]} : params; 
+            if (token) { base.token = token }; // Token should be an string or not sent at all
+
+            const smarap = (ZOMBI.utils.is_array(params)) ? {mod: params[0], fun: params[1], args: params[2]} : params; 
             
             const merged = ZOMBI.utils.extend(true, base, smarap);
 
-            ZOMBI.radio.emit("ZOMBI_SERVER_CALL_START", [merged.module, merged.function]);
+            ZOMBI.radio.emit("ZOMBI_SERVER_CALL_START", [merged.mod, merged.fun]);
 
             axios({
                 method: 'post',
@@ -290,28 +302,35 @@ const ZOMBI = (() => {
                 responseType: 'json',
                 responseEncoding: 'utf8',
                 headers: {'Content-Type': 'application/json'},
-                validateStatus: (status) => { return true; } // Zombi doesn't care about HTTP codes that much
+                validateStatus: () => { return true; } // Zombi doesn't care about HTTP codes that much
             }).then((response) => {
 
                 if(
                     typeof response.data === "undefined" || 
                     typeof response.data.error === "undefined" ||
-                    typeof response.data.info === "undefined" ||
+                    typeof response.data.code === "undefined" ||
                     typeof response.data.data === "undefined" ||
                     typeof response.data.message === "undefined"
                 ) {
 
-                    if(typeof callback === "function") { callback("Malformed server response", false); }
+                    if(typeof callback === "function") { 
+                        callback({
+                            error: true,
+                            code: 602,
+                            message: `Malformed response from server`,
+                            data: null
+                        }); 
+                    }
 
                 } else {
 
-                    if(response.data.info.expired) { // Session is expired
+                    if(response.data.code === 1001) {
 
                         ZOMBI.radio.emit("ZOMBI_SERVER_SESSION_EXPIRED");
     
                     } else {
     
-                        if(typeof callback === "function") { callback(null, response.data); }
+                        if(typeof callback === "function") { callback(response.data); }
     
                     }
 
@@ -319,24 +338,38 @@ const ZOMBI = (() => {
 
                 ZOMBI.radio.emit("ZOMBI_SERVER_CALL_TRAFFIC", {sequence: merged.sequence, request: merged, response: response.data});
 
-            }).catch((error) => {
+            }).catch(error => {
 
                 if (error.request) { // The request was made but no response was received. `error.request` is an instance of XMLHttpRequest
 
-                    if(typeof callback === "function") { callback(`Server error: ${error.message}`, false); }
+                    if(typeof callback === "function") {
+                        callback({
+                            error: true,
+                            code: 600,
+                            message: `Server error: ${error.message}`,
+                            data: null
+                        });
+                    }
 
                     ZOMBI.radio.emit("ZOMBI_SERVER_CALL_TRAFFIC", {sequence: merged.sequence, request: merged, response: `Server error: ${error.message}`});
 
                 } else { // Something happened in setting up the request that triggered an Error
 
-                    if(typeof callback === "function") { callback(`Request error: ${error.message}`, false); }
+                    if(typeof callback === "function") {
+                        callback({
+                            error: true,
+                            code: 601,
+                            message: `Request error`,
+                            data: null
+                        });
+                    }
 
                     ZOMBI.radio.emit("ZOMBI_SERVER_CALL_TRAFFIC", {sequence: merged.sequence, request: merged, response: `Request error: ${error.message}`});
                 }
                 
             }).then(() => { // This extra .then() works the same way as jquery's "always"
                 
-                ZOMBI.radio.emit("ZOMBI_SERVER_CALL_FINISH", [merged.module, merged.function]);
+                ZOMBI.radio.emit("ZOMBI_SERVER_CALL_FINISH", [merged.mod, merged.fun]);
 
             });
 

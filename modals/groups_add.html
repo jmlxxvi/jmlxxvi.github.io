@@ -50,26 +50,18 @@
                 ZOMBI.server(
                     ["sys_groups", "groups_add", [name, desc]],
 
-                    (error, response) => {
+                    response => {
 
-                        if(error) {
+                        if(response.error) {
 
-                            INDEX.flash(INDEX.i18n.label("SERVER_ERROR"));
-
+                            INDEX.flash(response.message);
+        
                         } else {
 
-                            if(response.error) {
+                            INDEX.close_modal();
 
-                                INDEX.flash(response.message);
-            
-                            } else {
-
-                                INDEX.close_modal();
-
-                                INDEX.datatables.refresh("groups_table");
-            
-                            }
-                        
+                            INDEX.datatables.refresh("groups_table");
+        
                         }
                     
                     }

@@ -129,20 +129,39 @@ const INDEX = (() => {
 
             },
 
+            inform_usage(label) {
+
+                ZOMBI.server(
+                    ["sys_labels", "inform_usage", label],
+                    response => {
+                        if(response.error) {
+                            ZOMBI.log(response.message, "I18N");
+                        }
+                    }
+                );
+
+            },
+
             label(name, replace, transform) {
 
-                var i, repl;
+                let i, repl;
 
                 if(ZOMBI.utils.is_empty(replace)) { repl = []; } 
                 else { repl = (ZOMBI.utils.is_array(replace)) ? replace : [replace]; }
 
-                var replace_members = repl.length;
+                const replace_members = repl.length;
 
-                var label;
+                let label;
 
                 if(i18n_data && i18n_data[name]) {
 
                     label = i18n_data[name];
+
+                    if (ZOMBI.config("I18N_INFORM_USAGE")) {
+
+                        INDEX.i18n.inform_usage(label);
+
+                    }
 
                     for (i = 1; i <= replace_members; i++) {
 
@@ -182,6 +201,12 @@ const INDEX = (() => {
                     if($(this).data("i18n")) {
                         
                         $(this).html(INDEX.i18n.label($(this).data("i18n")));
+
+                        if (ZOMBI.config("I18N_INFORM_USAGE")) {
+
+                            INDEX.i18n.inform_usage($(this).data("i18n"));
+
+                        }
                         
                     }
 
@@ -368,18 +393,12 @@ const INDEX = (() => {
     
                 ZOMBI.server(
                     ["sys_login", "logoff"],
-                    (error, response) => {
-    
+                    () => {
                         $("#index_navbar_username").text("");
-    
                         $("#index_login_modal").modal();
-    
                         INDEX.wipe_local_data();
-
-                        ZOMBI.io.close();
-                       
+                        ZOMBI.ws.close();
                     }
-        
                 );
     
             } else {
@@ -433,41 +452,35 @@ const INDEX = (() => {
             ZOMBI.server(
                 [mod, fun, filter],
 
-                (error, response) => {
+                response => {
 
-                    if(error) { ZOMBI.log(error, "SELECT"); } 
-                    
+                    if (response.error) { INDEX.flash(response.message);  }
+                        
                     else {
 
-                        if(response.error) { INDEX.flash(response.message);  }
-                        
-                        else {
+                        const elements = response.data
 
-                            const elements = response.data
+                        if(empty_data !== null) {
 
-                            if(empty_data !== null) {
-    
-                                const option = document.createElement('option');
-                                
-                                option.value = empty_data[0];
-                                option.text  = empty_data[1];
-    
-                                element.add(option);
-    
-                            }
-    
-                            for (const s of elements) {
-    
-                                const option = document.createElement('option');
-                                
-                                option.value = s[0];
-                                option.text  = s[1];
-    
-                                if(s[0] == selected) { option.selected = true; }
-    
-                                element.add(option);
-    
-                            }
+                            const option = document.createElement('option');
+                            
+                            option.value = empty_data[0];
+                            option.text  = empty_data[1];
+
+                            element.add(option);
+
+                        }
+
+                        for (const s of elements) {
+
+                            const option = document.createElement('option');
+                            
+                            option.value = s[0];
+                            option.text  = s[1];
+
+                            if(s[0] == selected) { option.selected = true; }
+
+                            element.add(option);
 
                         }
 
@@ -527,23 +540,15 @@ const INDEX = (() => {
                         ZOMBI.server(
                             [mod, fun, {data: data, download: false}],
             
-                            (error, response) => {
+                            response => {
             
-                                if(error) {
+                                if(response.error) {
             
-                                    INDEX.flash("Invalid data returned from server");
-            
+                                    INDEX.flash(response.message);
+        
                                 } else {
-            
-                                    if(response.error) {
-            
-                                        INDEX.flash(response.message);
-            
-                                    } else {
-            
-                                        callback(response.data);
-                                    }
-            
+        
+                                    callback(response.data);
                                 }
             
                             }
@@ -597,59 +602,51 @@ const INDEX = (() => {
                         ZOMBI.server(
                             [mod, fun, {data: data, download: true}],
             
-                            (error, response) => {
+                            response => {
             
-                                if(error) {
+                                if(response.error) {
             
-                                    INDEX.flash("Invalid data returned from server");
-            
+                                    INDEX.flash(response.message);
+        
                                 } else {
-            
-                                    if(response.error) {
-            
-                                        INDEX.flash(response.message);
-            
-                                    } else {
-    
-                                        var lines = "", line;
-    
-                                        const rows = response.data;
-    
-                                        rows.forEach(function(row) {
-    
-                                            line = "";
-    
-                                            row.forEach(function(col) {
-    
-                                                if(typeof col === "string") {
-    
-                                                    line += '"' + col + '",';
-    
-                                                } else {
-    
-                                                    line += col + ",";
-    
-                                                }
-                                                
-                                            });
-    
-                                            line = line.substr(0, line.length-1);
-    
-                                            line += "\n";
-    
-                                            lines += line;
-    
+
+                                    var lines = "", line;
+
+                                    const rows = response.data;
+
+                                    rows.forEach(function(row) {
+
+                                        line = "";
+
+                                        row.forEach(function(col) {
+
+                                            if(typeof col === "string") {
+
+                                                line += '"' + col + '",';
+
+                                            } else {
+
+                                                line += col + ",";
+
+                                            }
+                                            
                                         });
-    
-                                        const csv = header + lines;
-    
-                                        // https://github.com/eligrey/FileSaver.js/
-                                        var blob = new Blob([csv], {type: "text/csv;charset=utf-8", autoBOM: true });
-    
-                                        saveAs(blob, "download.csv");
-            
-                                    }
-            
+
+                                        line = line.substr(0, line.length-1);
+
+                                        line += "\n";
+
+                                        lines += line;
+
+                                    });
+
+                                    const csv = header + lines;
+
+                                    // https://github.com/eligrey/FileSaver.js/
+                                    var blob = new Blob([csv], {type: "text/csv;charset=utf-8", autoBOM: true });
+
+                                    saveAs(blob, "download.csv");
+        
                                 }
             
                             }
@@ -686,19 +683,20 @@ const INDEX = (() => {
 
         },
 
+        // TODO implement this
         change_password(current, typed, retiped) {
 
             ZOMBI.server(
                 ["sys_login", "reset_password", [current, typed, retiped]],
-                (error, response) => {
+                response => {
 
-                    if(error) {
+                    if(response.error) {
     
-                        console.log(error);
+                        console.log(response.message);
     
                     } else {
     
-                        console.log(response);
+                        console.log(JSON.stringify(response));
     
                     }
                     
@@ -757,8 +755,6 @@ $(() => {
         }, 
         "SOCKET_CONNECT_LISTENER_INDEX"
     );
-
-    
 
     // const index_login_18n_languages = [
     //     ["es", "Español"],
@@ -1023,11 +1019,12 @@ $(() => {
     const index_start = () => {
 
         ZOMBI.server(
+
             ["sys_login", "start"],
 
-            (error, response) => {
+            response => {
 
-                if(error) {
+                if(response.error) {
 
                     $("#index_login_modal").modal();
                     INDEX.flash(index_login_18n_labels[ZOMBI.language()]["RESTART"]);
@@ -1035,25 +1032,16 @@ $(() => {
 
                 } else {
 
-                    if(response.error) {
+                    $("#index_navbar_username").text(ZOMBI.fullname());
 
-                        INDEX.flash(response.message);
-                        INDEX.overlay.hide();
-    
-                    } else {
+                    INDEX.i18n.init(response.data.i18n, true);
 
-                        $("#index_navbar_username").text(ZOMBI.fullname());
-    
-                        INDEX.i18n.init(response.data.i18n, true);
-    
-                        INDEX.router.navigate();
+                    INDEX.router.navigate();
 
-                        INDEX.overlay.hide();
+                    INDEX.overlay.hide();
 
-                        ZOMBI.io.connect(false);
-    
-                    }
-                
+                    ZOMBI.ws.connect(false);
+
                 }
                
             }
@@ -1062,7 +1050,7 @@ $(() => {
 
     };
 
-    if(!ZOMBI.token()) { // ie, not logged in
+    if(!ZOMBI.token()) { // aka not logged in
 
         $("#index_login_modal").modal();
 
@@ -1085,52 +1073,55 @@ $(() => {
         const language = $("#index_login_language").val();
 
         ZOMBI.server(
+
             ["sys_login", "login", [username, password, language]],
 
-            (error, response) => {
+            response => {
 
-                if(error) {
+                if(response.error) {
 
-                    INDEX.flash(index_login_18n_labels[ZOMBI.language()]["RESTART"]);
+                    if (response.code === 1004) {
+
+                        $("#index_login_message").text(index_login_18n_labels[language]["NOLOGIN"]);
+
+                    } else {
+
+                        INDEX.flash(index_login_18n_labels[ZOMBI.language()]["RESTART"]);
+
+                    }
+
+                    $("#index_login_message").removeClass("d-none");
 
                 } else {
 
-                    if(response.error) {
+                    ZOMBI.token(response.data.token);
 
-                        $("#index_login_message").text(index_login_18n_labels[language][response.message]);
-                        $("#index_login_message").removeClass("d-none");
-    
+                    if(response.data.fullname) {
+
+                        $("#index_navbar_username").text(response.data.fullname);
+
+                        ZOMBI.fullname(response.data.fullname);
+
+                    }
+
+                    if(response.data.timezone) {
+
+                        ZOMBI.timezone(response.data.timezone);
+
                     } else {
 
-                        ZOMBI.token(response.data.token);
+                        ZOMBI.timezone(ZOMBI.config("DEFAULT_TIMEZONE"));
 
-                        if(response.data.fullname) {
-    
-                            $("#index_navbar_username").text(response.data.fullname);
-
-                            ZOMBI.fullname(response.data.fullname);
-    
-                        }
-
-                        if(response.data.timezone) {
-    
-                            ZOMBI.timezone(response.data.timezone);
-    
-                        } else {
-
-                            ZOMBI.timezone(ZOMBI.config("DEFAULT_TIMEZONE"));
-
-                        }
-    
-                        INDEX.i18n.init(response.data.i18n, true);
-    
-                        INDEX.router.navigate();
-
-                        $('#index_login_modal').modal('hide');
-
-                        ZOMBI.io.connect(false);
-    
                     }
+
+                    INDEX.i18n.init(response.data.i18n, true);
+
+                    INDEX.router.navigate();
+
+                    $('#index_login_modal').modal('hide');
+                    $("#index_login_message").addClass("d-none");
+
+                    ZOMBI.ws.connect(false);
                 
                 }
                

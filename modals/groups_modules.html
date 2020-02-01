@@ -58,39 +58,33 @@
                 ZOMBI.server(
                     ["sys_groups", "groups_modules_shift_to_group", group_id],
         
-                    (error, response) => {
+                    response => {
         
-                        if(error) { INDEX.flash(INDEX.i18n.label("SERVER_ERROR")); } 
-                        
-                        else {
-        
-                            if(response.error) { INDEX.flash(response.message); } 
+                        if(response.error) { INDEX.flash(response.message); } 
                             
-                            else {
-        
-                                const out_group = response.data[0];
-                                const in_group = response.data[1];
+                        else {
+    
+                            const out_group = response.data[0];
+                            const in_group = response.data[1];
 
-                                out_group.unshift(INDEX.i18n.label("SELECT_A_MODULE"));
+                            out_group.unshift(INDEX.i18n.label("SELECT_A_MODULE"));
 
-                                s2 = out_group.map(function(x) {
-                                    return {id: x, text: x};
-                                });
+                            s2 = out_group.map(function(x) {
+                                return {id: x, text: x};
+                            });
 
-                                $("#groups_modules_module_name").empty();
+                            $("#groups_modules_module_name").empty();
 
-                                // TODO check if there is a way to update the component without recreating it as it flashes when selecting
-                                $("#groups_modules_module_name").select2({
-                                    width: 'style',
-                                    dropdownParent: $("#groups_modules_module_name").parent(),
-                                    theme: "bootstrap4",
-                                    data: s2
-                                });
+                            // TODO check if there is a way to update the component without recreating it as it flashes when selecting
+                            $("#groups_modules_module_name").select2({
+                                width: 'style',
+                                dropdownParent: $("#groups_modules_module_name").parent(),
+                                theme: "bootstrap4",
+                                data: s2
+                            });
 
-                                groups_modules_generate_table(in_group);
-        
-                            }
-                        
+                            groups_modules_generate_table(in_group);
+    
                         }
                     
                     }
@@ -109,20 +103,14 @@
                 ZOMBI.server(
                     ["sys_groups", "groups_add_module_to_group", [group_id, module_name]],
         
-                    (error, response) => {
+                    response => {
         
-                        if(error) { INDEX.flash(INDEX.i18n.label("SERVER_ERROR")); } 
-                        
-                        else {
-        
-                            if(response.error) { INDEX.flash(response.message); } 
+                        if(response.error) { INDEX.flash(response.message); } 
                             
-                            else {
-        
-                                groups_modules_show_user_select(group_id);
-        
-                            }
-                        
+                        else {
+    
+                            groups_modules_show_user_select(group_id);
+    
                         }
                     
                     }
@@ -143,20 +131,14 @@
                 ZOMBI.server(
                     ["sys_groups", "groups_remove_module_from_group", [group_id, user_id]],
         
-                    (error, response) => {
+                    response => {
         
-                        if(error) { INDEX.flash(INDEX.i18n.label("SERVER_ERROR")); } 
-                        
-                        else {
-        
-                            if(response.error) { INDEX.flash(response.message); } 
+                        if(response.error) { INDEX.flash(response.message); } 
                             
-                            else {
-        
-                                groups_modules_show_user_select(group_id);
-        
-                            }
-                        
+                        else {
+    
+                            groups_modules_show_user_select(group_id);
+    
                         }
                     
                     }

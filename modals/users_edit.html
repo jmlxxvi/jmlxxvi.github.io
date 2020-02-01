@@ -84,56 +84,50 @@
             ZOMBI.server(
                 ["sys_users", "users_edit_data", [id]],
 
-                (error, response) => {
+                response => {
 
-                    if(error) { INDEX.flash(INDEX.i18n.label("SERVER_ERROR")); } 
-                    
+                    if(response.error) { INDEX.flash(response.message); } 
+                        
                     else {
 
-                        if(response.error) { INDEX.flash(response.message); } 
-                        
-                        else {
+                        const data = response.data[0];
 
-                            const data = response.data[0];
+                        $("#users_edit_username").val(data[0]);
+                        $("#users_edit_fullname").val(data[1]);
+                        // $("#users_edit_password").val(data[6]);
+                        $("#users_edit_email").val(data[2]);
+                        $("#users_edit_language").val(3);
 
-                            $("#users_edit_username").val(data[0]);
-                            $("#users_edit_fullname").val(data[1]);
-                            // $("#users_edit_password").val(data[6]);
-                            $("#users_edit_email").val(data[2]);
-                            $("#users_edit_language").val(3);
+                        const country_id = (data[5]) ? data[5] : 0 ;
 
-                            const country_id = (data[5]) ? data[5] : 0 ;
+                        document.getElementById("users_edit_country").value = country_id;
 
-                            document.getElementById("users_edit_country").value = country_id;
+                        INDEX.select(
+                            "users_edit_language", 
+                            "sys_users/users_languages_select", 
+                            [],
+                            [0, "-"],
+                            data[4]
+                        );
+                
+                        INDEX.select(
+                            "users_edit_country", 
+                            "sys_users/users_countries_select",
+                            [],
+                            [0, "-"],
+                            data[5]
+                        );
 
-                            INDEX.select(
-                                "users_edit_language", 
-                                "sys_users/users_languages_select", 
-                                [],
-                                [0, "-"],
-                                data[4]
-                            );
-                    
-                            INDEX.select(
-                                "users_edit_country", 
-                                "sys_users/users_countries_select",
-                                [],
-                                [0, "-"],
-                                data[5]
-                            );
+                        INDEX.select(
+                            "users_edit_timezone",
+                            "sys_users/users_timezones_select",
+                            ["country_id", country_id],
+                            null,
+                            data[3]
+                        );
 
-                            INDEX.select(
-                                "users_edit_timezone",
-                                "sys_users/users_timezones_select",
-                                ["country_id", country_id],
-                                null,
-                                data[3]
-                            );
-
-                            document.getElementById("users_edit_is_admin").checked = (data[7] === "Y");
-        
-                        }
-                    
+                        document.getElementById("users_edit_is_admin").checked = (data[7] === "Y");
+    
                     }
                 
                 }
@@ -176,22 +170,16 @@
                 ZOMBI.server(
                     ["sys_users", "users_delete", id],
 
-                    (error, response) => {
+                    response => {
 
-                        if(error) { INDEX.flash(INDEX.i18n.label("SERVER_ERROR")); } 
-                        
+                        if(response.error) { INDEX.flash(response.message); } 
+                            
                         else {
 
-                            if(response.error) { INDEX.flash(response.message); } 
-                            
-                            else {
+                            INDEX.close_modal();
 
-                                INDEX.close_modal();
+                            INDEX.datatables.refresh("users_table");
 
-                                INDEX.datatables.refresh("users_table");
-
-                            }
-                        
                         }
                     
                     }
@@ -218,22 +206,16 @@
                     ZOMBI.server(
                         ["sys_users", "users_edit", [id, username, fullname, password, email, parseInt(language), parseInt(country), parseInt(timezone), is_admin]],
     
-                        (error, response) => {
+                        response => {
     
-                            if(error) { INDEX.flash(INDEX.i18n.label("SERVER_ERROR")); } 
-                            
-                            else {
-    
-                                if(response.error) { INDEX.flash(response.message); } 
+                            if(response.error) { INDEX.flash(response.message); } 
                                 
-                                else {
-    
-                                    INDEX.close_modal();
-    
-                                    INDEX.datatables.refresh("users_table");
-    
-                                }
-                            
+                            else {
+
+                                INDEX.close_modal();
+
+                                INDEX.datatables.refresh("users_table");
+
                             }
                         
                         }

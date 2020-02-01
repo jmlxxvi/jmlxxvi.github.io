@@ -43,50 +43,45 @@ $(() => {
     };
 
     ZOMBI.server(
+
         ["sys_console", "mods"],
 
-        (error, response) => {
+        response => {
 
-            if(error) { INDEX.flash(error); } 
+            if (response.error) { INDEX.flash(response.message); }
 
             else {
 
-                if(response.error) { INDEX.flash(response.message); }
-                        
-                else {
+                const console_function = document.getElementById("console_function");
 
-                    const console_function = document.getElementById("console_function");
+                console_function.innerHTML = "";
 
-                    console_function.innerHTML = "";
-    
-                    const console_module = document.getElementById("console_module");
-    
-                    console_module.innerHTML = "";
-    
-                    const modules = response.data;
-    
-                    const default_option = document.createElement('option');
-    
-                    default_option.value = "";
-                    default_option.text  = "-";
-    
-                    console_module.add(default_option);
-    
-                    for (const s of modules) {
-    
-                        const option = document.createElement('option');
-                        
-                        option.value = s;
-                        option.text  = s;
-    
-                        console_module.add(option);
-    
-                    }
+                const console_module = document.getElementById("console_module");
+
+                console_module.innerHTML = "";
+
+                const modules = response.data;
+
+                const default_option = document.createElement('option');
+
+                default_option.value = "";
+                default_option.text = "-";
+
+                console_module.add(default_option);
+
+                for (const s of modules) {
+
+                    const option = document.createElement('option');
+
+                    option.value = s;
+                    option.text = s;
+
+                    console_module.add(option);
 
                 }
 
             }
-            
+
         }
 
     );
@@ -101,45 +96,34 @@ $(() => {
 
         console_function_element.innerHTML = "";
 
-        if(console_module_element.value !== "") {
+        if (console_module_element.value !== "") {
+
+            console_module_comments(console_module_element.value);
 
             ZOMBI.server(
-                {module: "sys_console", function: "funs", args: console_module_element.value},
 
-                (error, response) => {
+                {
+                    mod: "sys_console",
+                    fun: "funs",
+                    args: console_module_element.value
+                },
 
-                    if(error) {
+                response => {
 
-                        INDEX.flash(error);
+                    if (response.error) { INDEX.flash(response.message); }
 
-                    } else {
+                    else {
 
-                        if(response.error) { INDEX.flash(response.message); }
-                        
-                        else {
+                        const functions = response.data;
 
-                            const functions = response.data;
+                        for (const s of functions) {
 
-                            let first = true;
-    
-                            for (const s of functions) {
-    
-                                const option = document.createElement('option');
-                                
-                                option.value = s;
-                                option.text  = s;
-    
-                                console_function_element.add(option);
-    
-                                if(first) {
-    
-                                    first = false;
-    
-                                    console_function_comments(console_module_element.value, s);
-    
-                                }
-    
-                            }
+                            const option = document.createElement('option');
+
+                            option.value = s;
+                            option.text = s;
+
+                            console_function_element.add(option);
 
                         }
 
@@ -150,48 +134,51 @@ $(() => {
             );
 
         }
-        
+
     });
 
-    const console_function_element = document.getElementById("console_function");
+    // const console_function_element = document.getElementById("console_function");
 
-    console_function_element.addEventListener("change", () => {
-
-        console_delete_response();
-
-        console_function_comments(console_module_element.value, console_function_element.value);
-        
-    });
-
-    const console_function_comments = (mod, fun) => {
+    const console_module_comments = mod => {
 
         ZOMBI.server(
-                
-            ["sys_console", "coms", [mod, fun]],
 
-            (error, response) => {
+            ["sys_console", "coms", mod],
 
-                if(error) {
+            response => {
 
-                    INDEX.flash(error, "error");
+                if (response.error) {
+
+                    INDEX.flash(response.message);
 
                 } else {
 
-                    if(response.error) {
+                    if (response.data.length === 0) {
 
-                        INDEX.flash(response.message);
+                        document.getElementById("console_function_details").innerHTML = "";
 
                     } else {
 
-                        if(response.data.length === 0) {
+                        const md = window.markdownit({
+                            highlight: function (str, lang) {
+                                if (lang && hljs.getLanguage(lang)) {
+                                    try {
+                                        return '<pre class="hljs"><code>' +
+                                            hljs.highlight(lang, str, true).value +
+                                            '</code></pre>';
+                                    } catch (__) { }
+                                }
 
-                            document.getElementById("console_function_details_data").innerHTML = "";
-                            
-                        } else {
+                                return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+                            },
+                            html: true,
+                            linkify: false,
+                            typographer: true
+                        });
 
-                            document.getElementById("console_function_details_data").innerHTML = INDEX.utils.escape_for_html(response.data);
+                        const result = md.render(response.data);
 
-                        }
+                        document.getElementById("console_function_details").innerHTML = result;
 
                     }
 
@@ -203,19 +190,19 @@ $(() => {
 
     }
 
-    document.getElementById("submit_buttton").addEventListener("click", function(event)  {
+    document.getElementById("submit_buttton").addEventListener("click", function (event) {
 
         event.preventDefault();
 
         try {
 
-            const mod  = document.getElementById("console_module").value;
-            const fun  = document.getElementById("console_function").value;
+            const mod = document.getElementById("console_module").value;
+            const fun = document.getElementById("console_function").value;
             const args = document.getElementById("console_arguments").value;
 
             const console_raw_json_checked = document.getElementById("console_raw_json").checked;
 
-            if(mod === "" || fun === "") {
+            if (mod === "" || fun === "") {
 
                 INDEX.flash(INDEX.i18n.label("SELECT_A_MODULE_AND_A_FUNCTION"));
 
@@ -224,41 +211,27 @@ $(() => {
                 const sgra = (console_raw_json_checked) ? JSON.parse(args) : (args.split('\n').length === 1) ? args : args.split('\n');
 
                 const request = ZOMBI.server(
-                    
+
                     [mod, fun, sgra],
 
-                    (error, response) => {
+                    response => {
 
-                        
-
-                        if(error) {
-
-                            // INDEX.flash(error);
-                            console_show_response(error);
-
-                        } else {
-
-                            console_show_response(response);
-
-                            // if(response.error) { INDEX.flash(response.message); }
-                            // else { console_show_response(response); }
-
-                        }
+                        console_show_response(response);
 
                     }
 
                 );
 
                 console_show_request(request);
-                
+
             }
 
-        } catch(err) {
+        } catch (err) {
 
             INDEX.flash(err.message, "error", "JSON");
 
         }
-        
+
     }, false);
 
 });

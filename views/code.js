@@ -2,8 +2,6 @@
 
     INDEX.i18n.apply();
 
-    
-
     const generate_table = (data) => {
 
         let table_html = "<table class='table'>";
@@ -23,23 +21,14 @@
     const load_data = () => {
 
         ZOMBI.server(
-            ["sys_code", 
-            "modules_list"],
-            (error, results) => {
 
-                if(error) { INDEX.flash(error); }
+            ["sys_code", "modules_list"],
 
-                else {
+            response => {
 
-                    if(results.error) { INDEX.flash(results.message); }
+                if(response.error) { INDEX.flash(response.message); }
 
-                    else {
-
-                        generate_table(results.data);
-
-                    }
-
-                }
+                else { generate_table(response.data); }
 
             }
 
@@ -57,24 +46,18 @@
 
             [ "sys_code", "module_code", uid ],
 
-            (error, results) => {
+            response => {
 
-                if(error) { INDEX.flash(error); }
+                if(response.error) { INDEX.flash(response.message); }
 
                 else {
 
-                    if(results.error) { INDEX.flash(results.message); }
+                    $("#code_modal").find(".modal-title").html(uid);
 
-                    else {
+                    $("#code_modal").modal();
 
-                        $("#code_modal").find(".modal-title").html(uid);
-
-                        $("#code_modal").modal();
-
-                        // https://stackoverflow.com/a/47247404
-                        $("#code_text").html(PR.prettyPrintOne(results.data));
-
-                    }
+                    // https://stackoverflow.com/a/47247404
+                    $("#code_text").html(PR.prettyPrintOne(response.data));
 
                 }
 

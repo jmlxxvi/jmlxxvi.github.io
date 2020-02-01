@@ -32,24 +32,16 @@
             ZOMBI.server(
                 ["sys_users", "send_message_to_user", [uid, message]],
 
-                (error, response) => {
+                response => {
 
-                    if(error) {
+                    if(response.error) {
 
-                        INDEX.flash(INDEX.i18n.label("SERVER_ERROR"));
-
+                        INDEX.flash(response.message);
+    
                     } else {
 
-                        if(response.error) {
+                        INDEX.close_modal();
 
-                            INDEX.flash(response.message);
-        
-                        } else {
-
-                            INDEX.close_modal();
-
-                        }
-                    
                     }
                 
                 }
