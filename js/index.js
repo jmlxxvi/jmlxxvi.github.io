@@ -1078,8 +1078,6 @@ $(() => {
 
             response => {
 
-                console.log(response);
-
                 if(response.error) {
 
                     if (response.code === 1004) {

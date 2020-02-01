@@ -10,4 +10,3 @@ var zombiConfig = {
     "CONSOLE_LOG_KEEP_MAX_SIZE": 200,
     "I18N_INFORM_USAGE": false // You should know what you are doing to change this
 };
-

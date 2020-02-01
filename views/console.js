@@ -116,8 +116,6 @@ $(() => {
 
                         const functions = response.data;
 
-                        // let first = true;
-
                         for (const s of functions) {
 
                             const option = document.createElement('option');
@@ -126,14 +124,6 @@ $(() => {
                             option.text = s;
 
                             console_function_element.add(option);
-
-                            // if(first) {
-
-                            //     first = false;
-
-                            //     console_function_comments(console_module_element.value, s);
-
-                            // }
 
                         }
 
@@ -147,15 +137,7 @@ $(() => {
 
     });
 
-    const console_function_element = document.getElementById("console_function");
-
-    console_function_element.addEventListener("change", () => {
-
-        console_delete_response();
-
-        console_function_comments(console_module_element.value, console_function_element.value);
-
-    });
+    // const console_function_element = document.getElementById("console_function");
 
     const console_module_comments = mod => {
 
@@ -197,47 +179,6 @@ $(() => {
                         const result = md.render(response.data);
 
                         document.getElementById("console_function_details").innerHTML = result;
-
-                    }
-
-                }
-
-            }
-
-        );
-
-    }
-
-    const console_function_comments = (mod, fun) => {
-
-        ZOMBI.server(
-
-            ["sys_console", "coms", [mod, fun]],
-
-            response => {
-
-                if (response.error) {
-
-                    INDEX.flash(response.message);
-
-                } else {
-
-                    if (response.data.length === 0) {
-
-                        document.getElementById("console_function_details_data").innerHTML = "";
-
-                    } else {
-
-                        var md = window.markdownit({
-                            html: true,
-                            linkify: true,
-                            typographer: true
-                        });
-                        var result = md.render(response.data);
-
-                        // document.getElementById("console_function_details_data").innerHTML = INDEX.utils.escape_for_html(response.data);
-
-                        document.getElementById("console_function_details_data").innerHTML = result;
 
                     }
 

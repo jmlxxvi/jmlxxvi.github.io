@@ -217,8 +217,9 @@ const ZOMBI = (() => {
 
             send(params, callback) {
 
+                const token = ZOMBI.token();
+
                 const base = {
-                    token: ZOMBI.token(),
                     mod: "",
                     fun: "",
                     args: {},
@@ -226,6 +227,8 @@ const ZOMBI = (() => {
                     sequence: ZOMBI.sequence()
                 };
     
+                if (token) { base.token = token }; // Token should be an string or not sent at all
+
                 const smarap = (ZOMBI.utils.is_array(params)) ? {mod: params[0], fun: params[1], args: params[2]} : params; 
                 
                 const merged = ZOMBI.utils.extend(true, base, smarap);
@@ -274,14 +277,17 @@ const ZOMBI = (() => {
         
         _exec(params, callback) {
 
+            const token = ZOMBI.token();
+
             const base = {
-                token: ZOMBI.token(),
                 mod: "",
                 fun: "",
                 args: {},
                 config: {},
                 sequence: ZOMBI.sequence()
             };
+
+            if (token) { base.token = token }; // Token should be an string or not sent at all
 
             const smarap = (ZOMBI.utils.is_array(params)) ? {mod: params[0], fun: params[1], args: params[2]} : params; 
             
