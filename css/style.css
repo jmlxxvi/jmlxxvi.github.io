@@ -2,8 +2,7 @@ body {
     margin: 0;
     padding: 0;
     background-color: #ffffff;
-    color: #4d4d4d;
-    font-family: 'Roboto', sans-serif;
+    color: #1d1d1d;
     font-size: 1.125em;
   }
   a {
@@ -53,7 +52,7 @@ body {
     width: 150px;
   }
   aside div#user_meta a {
-    color: #60BB5A;
+    color: #000;
   }
   main header {
     padding: 40px;
@@ -69,39 +68,37 @@ body {
     max-width: 640px;
     padding: 20px 40px 40px 40px;
   }
-  main article div#article_text {
+  main article div.article_text {
     line-height: 1.375em;
   }
-  main article div#article_text a {
+  main article div.article_text a {
     text-decoration: underline;
   }
-  main article div#article_text code {
+  /* main article div.article_text code {
     margin: 2px;
     padding: 0;
     color: #000000;
     font-size: 0.75em;
-    font-family: 'Droid Sans Mono', 'PT Mono', monospace;
     background: #eeeeee;
-  }
-  main article div#article_text pre {
+  } */
+  /* main article div.article_text pre {
     margin: 22px 2px 22px 2px;
     padding: 5px;
     color: #fff;
     border-left: 5px solid #FFB24C;
     font-size: 0.75em;
-    font-family: 'Droid Sans Mono', 'PT Mono', monospace;
     background: #2D4041;
     line-height: 1.125em;
     overflow-x: auto;
-  }
-  main article div#article_text blockquote {
+  } */
+  main article div.article_text blockquote {
     margin: 22px 2px 22px 2px;
     padding-left: 40px;
     color: #999999;
     font-style: italic;
   }
   
-  main article div#article_text blockquote ul li {
+  main article div.article_text blockquote ul li {
     color: #4d4d4d;
   }
   
@@ -134,18 +131,17 @@ body {
   }
   main div#ending_message {
     padding: 0 40px 0 40px;
-    font-color: #eeeeee;
+    color: #0c0c0c;
     font-size: 0.675em;
   }
   
-  #article_title h3 a, #user_meta h2 a {
-    font-family: 'Roboto', sans-serif;
+  .article_title h3, #user_meta h2 a {
     font-size: 48px;
     font-weight: 900;
+    color: black;
   }
   
-  #article_text div h2 {
-    font-family: 'Roboto', sans-serif;
+  .article_text div h2 {
     font-size: 36px;
     font-weight: 900;
     margin-top: 40px;
@@ -153,17 +149,16 @@ body {
     line-height: 44px;
   }
   
-  #article_text code {
+  /* .article_text code {
     background-color: #eee;
-  }
+  } */
   
   
   #user_meta h2 a {
     font-size: 24px;
   }
   
-  #article_text p, #user_meta p {
-    font-family: 'Roboto', sans-serif;
+  .article_text p, #user_meta p {
     font-size: 22px;
     font-weight: normal;
     height: 186px;
@@ -173,7 +168,8 @@ body {
   
   #support_text {
     border-top: 1px solid #eee;
-    padding-top: 10px;
+    padding: 20px 40px 40px 40px;
+    max-width: 640px;
   }
   
   #support_text a {
@@ -193,7 +189,7 @@ body {
       margin: 10px 0 0 0;
     }
     aside div#user_meta {
-      text-align: left;
+      text-align: center;
     }
     aside div#user_meta a img {
       border-radius: 800px;
@@ -246,7 +242,7 @@ body {
       }
   
       aside div#user_meta {
-          text-align: left;
+          text-align: center;
       }
   
       main header {
@@ -257,11 +253,11 @@ body {
           padding: 16px;
       }
   
-      main article div#article_text blockquote {
+      main article div.article_text blockquote {
           padding-left: 5px;
       }
   
-      #article_text p, #user_meta p {
+      .article_text p, #user_meta p {
         line-height: 24px;
         font-size: 17px;
       }
@@ -274,11 +270,11 @@ body {
           font-size: 38px;
       }
   
-      #article_text div h2 {
+      .article_text div h2 {
           font-size: 38px;
       }
   
-      #article_text div h2 {
+      .article_text div h2 {
           margin-top: 5px;
           margin-bottom: 5px;
       }

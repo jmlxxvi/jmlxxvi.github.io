@@ -2,3 +2,9 @@
     display: none;
 }
 
+pre code {
+    border-left: 4px solid darkblue;
+    padding-left: 1.2em !important;
+}
+
+*:focus { outline: none; }
