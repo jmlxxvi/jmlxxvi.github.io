@@ -8,3 +8,15 @@ pre code {
 }
 
 *:focus { outline: none; }
+
+.monospaced {
+    font-family: 'Courier New', Courier, monospace;
+    background-color: #ededed;
+    border-radius: 5px;
+    padding-left: .5em;
+    padding-right: .5em;
+}
+
+#disqus_thread {
+    margin: 20px 40px;
+}
