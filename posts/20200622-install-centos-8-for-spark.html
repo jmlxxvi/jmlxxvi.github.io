@@ -1,7 +1,7 @@
 <article>
-    <p>Posted on Thu 02 January 2020 </p>
+    <p>Posted on Monday 22 June 2020 </p>
     <div class="article_title">
-        <h3>Installing CEntOS 8 to run Spark applications</h3>
+        <h3>Installing Spark 3 on CEntOS 8</h3>
     </div>
 
 
@@ -11,11 +11,14 @@
         <p>
             If you want to start researching, learning or even creating 
             a <a class="reference external" href="https://en.wikipedia.org/wiki/Proof_of_concept" target="_blank">POC</a>
-            for Spark applications here are the steps to install CEntOS 8 for that purpose.
+            for Spark applications here are the steps to install it on CEntOS 8 for that purpose.
         </p>
 
         <p>
-            Disclaimer: Steps here are for development purposes as we are not concerning about security (almost) at all. Being said that, let's begin.
+            <i>Disclaimer:</i> Steps here are for development purposes as we are not concerning about security (almost) at all. 
+            <br>
+            Being said that, let's begin.
+            <br>
             I'm using the minimal version of this OS as this is all I need. If you want to use the complete version, that's fine, 
             it will fork fine too. 
             Just go to <a class="reference external" href="https://www.centos.org/download/">https://www.centos.org/download/</a>
@@ -23,457 +26,241 @@
             In order to get the minimal version (not so minimal these days I have to confess) go to 
             <a class="reference external" href="http://isoredirect.centos.org/centos/8/isos/x86_64">http://isoredirect.centos.org/centos/8/isos/x86_64</a>, 
             pick a mirror and get the file <span class="monospaced">CentOS-8.2.2004-x86_64-minimal.iso</span>
+            <br>
+            If you are getting here from the future the last version available for download might be newer and most likely will work fine. 
+            I can't tell because I'm here in the present.
+            <br>
+            You can use tha ISO image to install the OS on any machine you want<sup><a href="#p1">[1]</a></sup>, 
+            something we are not taking care here but you may want to check
+            <a href="https://linoxide.com/distros/how-to-install-centos/" target="_blank">there</a>
         </p>
 
-        <pre><code class="javascript">var xx = fun(a);
-const f = async event => {
-    console.log("OK");
-}</code></pre>
+        <p>
+            Once you have the OS intalled we are ready to set it up. 
+            <br>
+            I didn't tell you (sorry) but it would be great if you had created a user for Spark during installation.
+            <br>
+            If you didn't it's OK, just:
+        </p>
 
-        <p>Rapid7 publish a <a class="reference external" href="https://opendata.rapid7.com/sonar.rdns_v2/">Reverse DNS</a> result set every few weeks in relation to their Project Sonar Study. It's comprised of DNS pointer record responses they've seen across the entire publicly-routable IPv4 spectrum. These results won't return every hostname pointing at a given IPv4 address but they're often hostnames created by the network provider. This can be very useful for distinguishing between IPs used for residential, enterprise and cloud connectivity.</p>
-<p>In a recent <a class="reference external" href="https://www.jetbrains.com/lp/devecosystem-2019/python">survey</a> 37% of Python developers use the language to build web scrapping bots. A lot of these run on various cloud platforms and other hosting providers. Knowing a hostname of a given IPv4 address helps in excluding synthetic traffic from any web log analysis. This isn't a complete answer to identifying bot traffic and can certainly throw up false positives but nonetheless, it's a reasonably clear signal of infrastructure being used.</p>
-<p>Executing DNS lookups on an ad-hoc basis in order to enrich network traffic logs can result in an unpredictable amount of network latency and running the same query in quick succession is wasteful. Batch lookups wouldn't lend themselves well to this problem as returning answers in real-time is more valuable due to the freshness of the data and its value to network operations. It's reasonable to expect that a lookup agent would hold open a connection or pool of connections to a database so for this exercise I'll sequentially look up IPv4 addresses while maintaining the same database connection.</p>
-<p>My interest here is in seeing the performance differences between using PostgreSQL with a B-Tree index versus ClickHouse and its MergeTree engine for this use case.</p>
-<div class="section" id="installing-prerequisites">
-<h2>Installing Prerequisites</h2>
-<p>The machine I'm using has an Intel Core i5 4670K clocked at 3.4 GHz, 8 GB of DDR3 RAM and a 250 GB Samsung NVMe SSD 960 EVO connected via a PCIe expansion card.</p>
-<p>Below I'll install PostgreSQL 12.1 and ClickHouse 19.17.6.36 as well as a variety of other tools and libraries. The following was run on a fresh installation of Ubuntu 16.04.2 LTS.</p>
-<div class="highlight"><pre><span></span>$ sudo apt-key adv <span class="se">\</span>
---keyserver hkp://keyserver.ubuntu.com:80 <span class="se">\</span>
---recv E0C56BD4
-$ wget -qO- <span class="se">\</span>
-https://www.postgresql.org/media/keys/ACCC4CF8.asc <span class="se">\</span>
-    <span class="p">|</span> sudo apt-key add -
-$ <span class="nb">echo</span> <span class="s2">&quot;deb http://repo.yandex.ru/clickhouse/deb/stable/ main/&quot;</span> <span class="se">\</span>
-<span class="p">|</span> sudo tee /etc/apt/sources.list.d/clickhouse.list
-$ <span class="nb">echo</span> <span class="s2">&quot;deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main&quot;</span> <span class="se">\</span>
-<span class="p">|</span> sudo tee /etc/apt/sources.list.d/pgdg.list
-$ sudo apt update
-</pre></div>
-<div class="highlight"><pre><span></span>$ sudo apt install <span class="se">\</span>
-clickhouse-client <span class="se">\</span>
-clickhouse-server <span class="se">\</span>
-jq <span class="se">\</span>
-libpq-dev <span class="se">\</span>
-pigz <span class="se">\</span>
-postgresql-12 <span class="se">\</span>
-postgresql-client-12 <span class="se">\</span>
-postgresql-contrib <span class="se">\</span>
-python-dev <span class="se">\</span>
-python-pip <span class="se">\</span>
-sqlite3 <span class="se">\</span>
-virtualenv
-</pre></div>
-<p>I'll create a Python virtual environment with packages for PostgreSQL and ClickHouse connectivity as well as a domain name parser.</p>
-<div class="highlight"><pre><span></span>$ virtualenv ~/.lookup
-$ <span class="nb">source</span> ~/.lookup/bin/activate
-$ pip install <span class="se">\</span>
-<span class="s1">&#39;clickhouse-driver[lz4]&#39;</span> <span class="se">\</span>
-psycopg2 <span class="se">\</span>
-tldextract
-</pre></div>
-<p>I'll launch ClickHouse Server. PostgreSQL already launched its server automatically when it was installed.</p>
-<div class="highlight"><pre><span></span>$ sudo service clickhouse-server start
-</pre></div>
-<p>I'll create a default ClickHouse client configuration file for my UNIX account. I set the password for the default ClickHouse user to <tt class="docutils literal">root</tt> when I installed the server software.</p>
-<div class="highlight"><pre><span></span>$ mkdir -p ~/.clickhouse-client
-$ vi ~/.clickhouse-client/config.xml
-</pre></div>
-<div class="highlight"><pre><span></span><span class="nt">&lt;config&gt;</span>
-<span class="nt">&lt;password&gt;</span>root<span class="nt">&lt;/password&gt;</span>
-<span class="nt">&lt;/config&gt;</span>
-</pre></div>
-</div>
-<div class="section" id="the-reverse-dns-dataset">
-<h2>The Reverse DNS Dataset</h2>
-<p>The following is an ANSI diagram of the stages the dataset will go through in this tutorial.</p>
-<div class="highlight"><pre><span></span>Original GZIP-compressed JSON from Rapid 7 (11 GB)
-└── JSON split into 4 files (11 GB)
-└── Four GZIP-compressed CSV files of full hostnames and IPv4 addresses in dot-decimal format (6 GB)
-    └── Four uncompressed CSV files of domain name stubs and IPv4 addresses in 32-bit unsigned integer format (23 GB)
-        └── SQLite3 Database (28 GB excluding the index)
-            └── Shrunken uncompressed CSV (0.5 GB)
-                ├── PostgreSQL Database (1.4 GB)
-                └── ClickHouse Log Engine Database (0.1 GB)
-                    └── ClickHouse MergeTree Engine Database (0.3 GB)
-</pre></div>
-<p>I'll download the Reverse DNS dataset from Rapid7. I've noticed they remove older versions of their database when newer versions are published so in the future you will probably have to modify the URL below with a newer one found on their <a class="reference external" href="https://opendata.rapid7.com/sonar.rdns_v2/">downloads</a> page.</p>
-<div class="highlight"><pre><span></span>$ wget -c -O rdns.json.gz <span class="se">\</span>
-https://opendata.rapid7.com/sonar.rdns_v2/2019-11-27-1574813015-rdns.json.gz
-</pre></div>
-<p>The dataset is delivered as a ~1.27 billion-line, 11 GB GZIP-compressed file with one JSON-serialised record per line. The following is an example of one record.</p>
-<div class="highlight"><pre><span></span>$ pigz -dc rdns.json.gz <span class="se">\</span>
-<span class="p">|</span> head -n1 <span class="se">\</span>
-<span class="p">|</span> python -mjson.tool
-</pre></div>
-<div class="highlight"><pre><span></span><span class="p">{</span>
-<span class="nt">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;1.10.230.137&quot;</span><span class="p">,</span>
-<span class="nt">&quot;timestamp&quot;</span><span class="p">:</span> <span class="s2">&quot;1574835472&quot;</span><span class="p">,</span>
-<span class="nt">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;ptr&quot;</span><span class="p">,</span>
-<span class="nt">&quot;value&quot;</span><span class="p">:</span> <span class="s2">&quot;node-k95.pool-1-10.dynamic.totinternet.net&quot;</span>
-<span class="p">}</span>
-</pre></div>
-<p>I want to process this data using four processes, each will run on a separate CPU core. The dataset has around 1.2 billion lines so I'll break them into files of, at most, 320 million lines each.</p>
-<div class="highlight"><pre><span></span>$ pigz -dc rdns.json.gz <span class="se">\</span>
-<span class="p">|</span> split --lines<span class="o">=</span><span class="m">320000000</span> <span class="se">\</span>
-        --filter<span class="o">=</span><span class="s2">&quot;pigz &gt; rdns_\$FILE.json.gz&quot;</span>
-</pre></div>
-<p>These are the resulting files produced by the above. Each file is ~2.8 GB.</p>
-<div class="highlight"><pre><span></span>rdns_xaa.json.gz
-rdns_xab.json.gz
-rdns_xac.json.gz
-rdns_xad.json.gz
-</pre></div>
-<p>I will then extract the full domain name and IPv4 address from each file in parallel and place them in GZIP-compressed, comma-delimited CSV files.</p>
-<div class="highlight"><pre><span></span>$ ls rdns_*.json.gz <span class="se">\</span>
-<span class="p">|</span> xargs -P4 -n1 -I <span class="o">{}</span> sh -c <span class="se">\</span>
-    <span class="s2">&quot;pigz -dc {} \</span>
-<span class="s2">            | jq &#39;.name + \&quot;,\&quot; + .value&#39; \</span>
-<span class="s2">            | sed &#39;s/\&quot;//g&#39; \</span>
-<span class="s2">            | pigz &gt; {}.csv.gz&quot;</span>
-</pre></div>
-<p>The above produced 6 GB of GZIP-compressed CSV files. Here is an example of the output of the above operation.</p>
-<div class="highlight"><pre><span></span>$ gunzip -c rdns_xaa.json.gz.csv.gz <span class="p">|</span> tail -n3
-</pre></div>
-<div class="highlight"><pre><span></span>104.197.172.33,33.172.197.104.bc.googleusercontent.com
-104.197.172.34,34.172.197.104.bc.googleusercontent.com
-104.197.172.35,35.172.197.104.bc.googleusercontent.com
-</pre></div>
-</div>
-<div class="section" id="extracting-domain-name-stubs">
-<h2>Extracting Domain Name Stubs</h2>
-<p>I want to remove any CNAMEs and top-level domains from the domain names. In the above example <tt class="docutils literal">33.172.197.104.bc.googleusercontent.com</tt> would simply become <tt class="docutils literal">googleusercontent</tt>. This makes it easier to group domains from entities that use a wide variety of top-level domains and removes the noise of the CNAMEs which can be unique to each IPv4 address. Below I'll use <a class="reference external" href="https://pypi.org/project/tldextract/">tldextract</a> for this task.</p>
-<p>The code below will also convert the IPv4 address from its dot-decimal format into an unsigned 32-bit integer.</p>
-<div class="highlight"><pre><span></span>$ vi domain_stub.py
-</pre></div>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gzip</span>
-<span class="kn">from</span>   <span class="nn">glob</span> <span class="kn">import</span> <span class="n">glob</span>
-<span class="kn">from</span>   <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Pool</span>
-<span class="kn">from</span>   <span class="nn">socket</span> <span class="kn">import</span> <span class="n">inet_aton</span>
-<span class="kn">from</span>   <span class="nn">struct</span> <span class="kn">import</span> <span class="n">unpack</span>
-<span class="kn">from</span>   <span class="nn">uuid</span> <span class="kn">import</span> <span class="n">uuid4</span>
+        <pre><code class="shell">[root@sp3m ~]# useradd data
+[root@sp3m ~]# passwd data
+Changing password for user data.
+New password: 
+BAD PASSWORD: The password is shorter than 8 characters
+Retype new password: 
+passwd: all authentication tokens updated successfully.
+[root@sp3m ~]# usermod -aG wheel data</code></pre>
 
-<span class="kn">from</span> <span class="nn">tldextract</span> <span class="kn">import</span> <span class="n">extract</span> <span class="k">as</span> <span class="n">tld_ex</span>
+        <p>
+            Here we created the user <span class="monospaced">data</span>, changed his password and finally we included him to 
+            the <span class="monospaced">wheel</span> group to make him able to <span class="monospaced">sudo</span>. 
+            <br>
+            I am feelling bold today and used <span class="monospaced">root</span> but you may want to use any regular user 
+            with <span class="monospaced">sudo</span> privileges.
+        </p>
+        <p>
+            I hope you forgive me if you are a Security Analist or something like that. Next we are doing a couple of things not
+            considered among the best security practices but we are creating a development/training box here (are we?)
+        </p>
 
+        <pre><code class="shell">[root@sp3m ~]# sudo systemctl stop firewalld
+[root@sp3m ~]# sudo systemctl disable firewalld
+Removed /etc/systemd/system/multi-user.target.wants/firewalld.service.
+Removed /etc/systemd/system/dbus-org.fedoraproject.FirewallD1.service.</code></pre>
 
-<span class="n">ip2int</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">unpack</span><span class="p">(</span><span class="s2">&quot;!I&quot;</span><span class="p">,</span> <span class="n">inet_aton</span><span class="p">(</span><span class="n">x</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <p>
+            After that edit the file <span class="monospaced">/etc/selinux/config</span> and change
+            <br>
+            <span class="monospaced">SELINUX=enforcing</span>
+            to
+            <span class="monospaced">SELINUX=disabled</span>
+        </p>
 
+        <p>
+            You may want to upgrade the system although this is not estrictly necessary: 
+        </p>
 
-<span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="n">manifest</span><span class="p">):</span>
-<span class="n">input_file</span><span class="p">,</span> <span class="n">output_file</span> <span class="o">=</span> <span class="n">manifest</span>
+        <pre><code class="shell">[root@sp3m ~]# yum upgrade
+CentOS-8 - AppStream          3.4 MB/s | 5.8 MB     00:01    
+CentOS-8 - Base               2.7 MB/s | 2.2 MB     00:00    
+CentOS-8 - Extras              11 kB/s | 6.7 kB     00:00    
+Dependencies resolved.
+===============================================================================
+Package           Architecture Version                   Repository     Size
+===============================================================================
+Installing:
+kernel                  x86_64 4.18.0-193.6.3.el8_2          BaseOS    2.8 M
+kernel-core             x86_64 4.18.0-193.6.3.el8_2          BaseOS     28 M
+kernel-modules          x86_64 4.18.0-193.6.3.el8_2          BaseOS     23 M
+Upgrading:
+bpftool                 x86_64 4.18.0-193.6.3.el8_2          BaseOS    3.4 M
+coreutils               x86_64 8.30-7.el8_2.1                BaseOS    1.2 M
+coreutils-common        x86_64 8.30-7.el8_2.1                BaseOS    2.0 M
+gnutls                  x86_64 3.6.8-10.el8_2                BaseOS    915 k
+initscripts             x86_64 10.00.6-1.el8_2.1             BaseOS    338 k
+kernel-tools            x86_64 4.18.0-193.6.3.el8_2          BaseOS    2.9 M
+kernel-tools-libs       x86_64 4.18.0-193.6.3.el8_2          BaseOS    2.8 M
+microcode_ctl           x86_64 4:20191115-4.20200602.2.el8_2 BaseOS    2.6 M
+python3-perf            x86_64 4.18.0-193.6.3.el8_2          BaseOS    2.9 M
+python3-syspurpose      x86_64 1.26.17-1.el8_2               BaseOS    286 k
+selinux-policy          noarch 3.14.3-41.el8_2.4             BaseOS    614 k
+selinux-policy-targeted noarch 3.14.3-41.el8_2.4             BaseOS     15 M
+sos                     noarch 3.8-6.el8_2                   BaseOS    522 k
+systemd                 x86_64 239-30.el8_2                  BaseOS    3.5 M
+systemd-libs            x86_64 239-30.el8_2                  BaseOS    1.1 M
+systemd-pam             x86_64 239-30.el8_2                  BaseOS    449 k
+systemd-udev            x86_64 239-30.el8_2                  BaseOS    1.3 M
+tzdata                  noarch 2020a-1.el8                   BaseOS    469 k
+Installing dependencies:
+xkeyboard-config        noarch 2.28-1.el8                    AppStream 782 k
+Installing weak dependencies:
+libxkbcommon            x86_64 0.9.1-1.el8                   AppStream 116 k
 
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_file</span><span class="p">,</span> <span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
-    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">input_file</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">):</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">ip</span><span class="p">,</span> <span class="n">domain</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
-            <span class="n">out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%d</span><span class="s1">,</span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">ip2int</span><span class="p">(</span><span class="n">ip</span><span class="p">),</span>
-                                   <span class="n">tld_ex</span><span class="p">(</span><span class="n">domain</span><span class="p">)[</span><span class="mi">1</span><span class="p">]))</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="k">pass</span>
+Transaction Summary
+===============================================================================
+Install   5 Packages
+Upgrade  18 Packages
 
+Total download size: 97 M
+Is this ok [y/N]: y</code></pre>
 
-<span class="n">filenames</span> <span class="o">=</span> <span class="p">[(</span><span class="n">csv_gz</span><span class="p">,</span>
-          <span class="s1">&#39;out.</span><span class="si">%s</span><span class="s1">.csv&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid4</span><span class="p">())[:</span><span class="mi">6</span><span class="p">])</span>
-         <span class="k">for</span> <span class="n">csv_gz</span> <span class="ow">in</span> <span class="n">glob</span><span class="p">(</span><span class="s1">&#39;rdns_*.json.gz.csv.gz&#39;</span><span class="p">)]</span>
+        <p>
+            After the <span class="monospaced">selinux</span> change and (maybe) the upgrade, reboot the computer: 
+        </p>
 
-<span class="n">pool</span> <span class="o">=</span> <span class="n">Pool</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">extract</span><span class="p">,</span> <span class="n">filenames</span><span class="p">)</span>
-</pre></div>
-<div class="highlight"><pre><span></span>$ python domain_stub.py
-</pre></div>
-<p>The above took over a day to run on my machine. I believe the tldextract library is well-written and reasonable steps have been taken to optimise it. Nonetheless, I did raise a <a class="reference external" href="https://github.com/john-kurkowski/tldextract/issues/175">ticket</a> to see if there is anything that could be done to speed up the performance even further. I suspect a string-focused library like this could be ported to C, C++, Rust or GoLang and yield greater performance.</p>
-<p>The above produced 23 GB of uncompressed CSV files. Here is a sample from one of the resulting output files.</p>
-<div class="highlight"><pre><span></span>$ head -n3 out.7dcbe9.csv
-</pre></div>
-<div class="highlight"><pre><span></span>17491593,totinternet
-17491594,totinternet
-17491595,totinternet
-</pre></div>
-</div>
-<div class="section" id="reducing-the-search-space">
-<h2>Reducing the Search Space</h2>
-<p>In the above example <tt class="docutils literal">totinternet</tt> is listed as the hostname stub for at least three IPv4 addresses that run in sequential order. I want to see if I can build ranges where a hostname stub is paired with the lowest and highest IPv4 addresses that run sequentially and uninterrupted. This way there will be fewer records describing the same dataset and ultimately shrink the search space for the lookup tasks later on in this post.</p>
-<p>I'll import the dataset into a single table in SQLite3, apply an index and then go through each record ordered by the value of the IPv4 address and print out any uninterrupted sequences for any given hostname stub.</p>
-<div class="highlight"><pre><span></span>$ sqlite3 lookup.db
-</pre></div>
-<div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">ip_host</span> <span class="p">(</span>
-<span class="ss">&quot;ipv4&quot;</span> <span class="nb">INTEGER</span><span class="p">,</span>
-<span class="ss">&quot;domain_stub&quot;</span> <span class="nb">TEXT</span>
-<span class="p">);</span>
-</pre></div>
-<p>The following produced a 28 GB database prior to the index being applied.</p>
-<div class="highlight"><pre><span></span>$ cat out.*.csv <span class="se">\</span>
-<span class="p">|</span> sqlite3 -csv <span class="se">\</span>
-          -separator <span class="s1">&#39;,&#39;</span> <span class="se">\</span>
-          lookup.db <span class="se">\</span>
-          <span class="s1">&#39;.import /dev/stdin ip_host&#39;</span>
-</pre></div>
-<div class="highlight"><pre><span></span>$ sqlite3 lookup.db
-</pre></div>
-<div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">INDEX</span> <span class="n">ip_host_ipv4</span> <span class="k">ON</span> <span class="n">ip_host</span> <span class="p">(</span><span class="n">ipv4</span><span class="p">);</span>
-</pre></div>
-<div class="highlight"><pre><span></span>$ vi shrink.py
-</pre></div>
-<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sqlite3</span>
+        <pre><code class="shell">[root@sp3m ~]# reboot</code></pre>
 
-<span class="n">lookup_conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s1">&#39;lookup.db&#39;</span><span class="p">)</span>
-<span class="n">lookup_cur</span> <span class="o">=</span> <span class="n">lookup_conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <p>
+            Install some packages we need: 
+        </p>
 
-<span class="n">sql</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;SELECT ipv4, domain_stub</span>
-<span class="s1">         FROM ip_host</span>
-<span class="s1">         ORDER BY ipv4&#39;&#39;&#39;</span>
+        <pre><code class="shell">[root@sp3m ~]# yum install wget curl net-tools tar
+Last metadata expiration check: 0:26:17 ago on lun 22 jun 2020 20:58:01 EDT.
+Package curl-7.61.1-12.el8.x86_64 is already installed.
+Package net-tools-2.0-0.51.20160912git.el8.x86_64 is already installed.
+Package tar-2:1.30-4.el8.x86_64 is already installed.
+Dependencies resolved.
+=============================================================
+    Package  Architecture  Version          Repository  Size
+=============================================================
+Installing:
+    wget     x86_64        1.19.5-8.el8_1.1 AppStream   735 k
 
-<span class="n">lookup_cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+Transaction Summary
+=============================================================
+Install  1 Package
 
-<span class="n">last_ip</span><span class="p">,</span> <span class="n">last_domain</span><span class="p">,</span> <span class="n">consecutive</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="mi">0</span>
+Total download size: 735 k
+Installed size: 2.9 M
+Is this ok [y/N]: y</code></pre>
 
-<span class="k">for</span> <span class="n">ipv4</span><span class="p">,</span> <span class="n">domain_stub</span> <span class="ow">in</span> <span class="n">lookup_cur</span><span class="p">:</span>
-<span class="k">if</span> <span class="n">ipv4</span> <span class="o">!=</span> <span class="n">last_ip</span> <span class="o">+</span> <span class="p">(</span><span class="n">consecutive</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">last_domain</span><span class="p">:</span>
-        <span class="k">print</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">last_domain</span><span class="p">,</span>
-                            <span class="n">last_ip</span><span class="p">,</span>
-                            <span class="p">(</span><span class="n">last_ip</span> <span class="o">+</span> <span class="n">consecutive</span><span class="p">))</span>
+        <p>
+            One last installation, Java. Spark 3 is compatible with Java 11 so we are installing that.
+        </p>
 
-    <span class="n">last_ip</span> <span class="o">=</span> <span class="n">ipv4</span>
-    <span class="n">last_domain</span> <span class="o">=</span> <span class="n">domain_stub</span>
-    <span class="n">consecutive</span> <span class="o">=</span> <span class="mi">0</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="n">consecutive</span> <span class="o">=</span> <span class="n">consecutive</span> <span class="o">+</span> <span class="mi">1</span>
+        <pre><code class="shell">yum install java-11-openjdk java-11-openjdk-devel</code></pre>
 
-<span class="k">if</span> <span class="n">consecutive</span><span class="p">:</span>
-<span class="k">print</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">last_domain</span><span class="p">,</span>
-                    <span class="n">last_ip</span><span class="p">,</span>
-                    <span class="p">(</span><span class="n">last_ip</span> <span class="o">+</span> <span class="n">consecutive</span><span class="p">))</span>
-</pre></div>
-<div class="highlight"><pre><span></span>$ python shrink.py &gt; shrunken.csv
-</pre></div>
-<p>The resulting CSV file is 508 MB uncompressed and is made up of 17,784,359 lines, 71x fewer than the source dataset. Here is a sample of the file produced.</p>
-<div class="highlight"><pre><span></span>$ head -n3 shrunken.csv
-</pre></div>
-<div class="highlight"><pre><span></span>one,16777217,16777217
-bigredgroup,16778244,16778244
-gtelecom,16778501,16778501
-</pre></div>
-<p>I'll produce a random set of records that will be used to do lookups in the benchmarks below. This will ensure that every lookup is a hit and every query is unique.</p>
-<div class="highlight"><pre><span></span>$ sort -R shrunken.csv <span class="p">|</span> head -n1000 &gt; unique_ips
-</pre></div>
-</div>
-<div class="section" id="populating-postgresql">
-<h2>Populating PostgreSQL</h2>
-<p>I'll setup a PostgreSQL account and create a database that will be populated by the &quot;shrunken&quot; dataset.</p>
-<div class="highlight"><pre><span></span>$ sudo -u postgres <span class="se">\</span>
-bash -c <span class="s2">&quot;psql -c \&quot;CREATE USER mark</span>
-<span class="s2">                       WITH PASSWORD &#39;test&#39;</span>
-<span class="s2">                       SUPERUSER;\&quot;&quot;</span>
-$ createdb ip_ranges
-$ psql ip_ranges
-</pre></div>
-<div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">ip_ranges</span> <span class="p">(</span>
-<span class="n">domain_stub</span>  <span class="nb">VARCHAR</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span>
-<span class="ss">&quot;start&quot;</span>      <span class="n">BIGSERIAL</span><span class="p">,</span>
-<span class="ss">&quot;end&quot;</span>        <span class="n">BIGSERIAL</span>
-<span class="p">);</span>
+        <p>
+            Now we are ready to install and setup Spark.
+            <br>
+            Please note that from now on I am using the user <span class="monospaced">data</span> 
+            and not using <span class="monospaced">root</span> anymore (or sudoing).
+            <br>
+            Go to the Spark download <a class="reference external" href="https://spark.apache.org/downloads.html" target="_blank">site</a> and
+            get the file <span class="monospaced">spark-3.0.0-bin-hadoop3.2.tgz</span><sup><a href="#p2">[2]</a></sup>
+        </p>
 
-<span class="err">\</span><span class="k">copy</span> <span class="n">ip_ranges</span> <span class="k">FROM</span> <span class="s1">&#39;shrunken.csv&#39;</span> <span class="k">DELIMITER</span> <span class="s1">&#39;,&#39;</span> <span class="n">CSV</span>
-</pre></div>
-<p>PostgreSQL can scan its indices both forwards and backwards at nearly the same speed but when running a scan, it cannot change direction without starting a new scan. I'll create an index on the dataset that sorts the data by the first IPv4 address in the range and then by the last IPv4 in the range in reverse. That way when there is a hit on the first IPv4 address in the range the second column's hit will always come afterword avoiding PostgreSQL having to start a second scan.</p>
-<div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">INDEX</span> <span class="n">ip_ranges_inverse</span>
-<span class="k">ON</span> <span class="n">ip_ranges</span> <span class="p">(</span><span class="ss">&quot;start&quot;</span><span class="p">,</span> <span class="ss">&quot;end&quot;</span> <span class="k">DESC</span><span class="p">);</span>
-</pre></div>
-<p>I'll then re-order the table based on the ordering in the above index.</p>
-<div class="highlight"><pre><span></span><span class="k">ALTER</span> <span class="k">TABLE</span> <span class="n">ip_ranges</span>
-<span class="k">CLUSTER</span> <span class="k">ON</span> <span class="n">ip_ranges_inverse</span><span class="p">;</span>
-</pre></div>
-<p>I'll also update the statistics used by PostgreSQL's query planner.</p>
-<div class="highlight"><pre><span></span><span class="k">VACUUM</span> <span class="k">ANALYZE</span> <span class="n">ip_ranges</span><span class="p">;</span>
-</pre></div>
-<p>The resulting database is 1,479 MB in PostgreSQL's internal format.</p>
-<div class="highlight"><pre><span></span><span class="err">\</span><span class="n">l</span><span class="o">+</span> <span class="n">ip_ranges</span>
-</pre></div>
-<div class="highlight"><pre><span></span>                                                 List of databases
-Name    | Owner | Encoding |   Collate   |    Ctype    | Access privileges |  Size   | Tablespace | Description
------------+-------+----------+-------------+-------------+-------------------+---------+------------+-------------
-ip_ranges | mark  | UTF8     | en_US.UTF-8 | en_US.UTF-8 |                   | 1479 MB | pg_default |
-</pre></div>
-<p>Below I'll be using a prepared query for the lookup process. The <tt class="docutils literal">PREPARE</tt> statement will parse the SQL, analyse it and perform any rewriting / macro expansion of the query ahead of time and only once during this exercise. Later on, when the <tt class="docutils literal">EXECUTE</tt> statement is called the query will only need to be planned and executed saving a good amount of overhead.</p>
-<p>This post originally did not state that sequential scanning should be turned off and PostgreSQL would pick this over scanning its index. Thanks to Justin Azoff for pointing this out.</p>
-<div class="highlight"><pre><span></span><span class="k">EXPLAIN</span> <span class="k">EXECUTE</span> <span class="n">find_stub</span><span class="p">(</span><span class="mi">2884839823</span><span class="p">);</span>
-</pre></div>
-<div class="highlight"><pre><span></span>                                      QUERY PLAN
----------------------------------------------------------------------------------------
-Limit  (cost=0.00..0.10 rows=1 width=8)
--&gt;  Seq Scan on ip_ranges  (cost=0.00..386967.84 rows=3903622 width=8)
-     Filter: ((start &lt;= &#39;2884839823&#39;::bigint) AND (&quot;end&quot; &gt;= &#39;2884839823&#39;::bigint))
-</pre></div>
-<div class="highlight"><pre><span></span><span class="k">SET</span> <span class="n">enable_seqscan</span> <span class="o">=</span> <span class="k">off</span><span class="p">;</span>
-</pre></div>
-<div class="highlight"><pre><span></span>                                             QUERY PLAN
-----------------------------------------------------------------------------------------------------
-Limit  (cost=0.44..0.58 rows=1 width=8)
--&gt;  Index Scan using ip_ranges_inverse on ip_ranges  (cost=0.44..568625.21 rows=3903622 width=8)
-     Index Cond: ((start &lt;= &#39;2884839823&#39;::bigint) AND (&quot;end&quot; &gt;= &#39;2884839823&#39;::bigint))
-</pre></div>
-<p>I've added this setting to the code below.</p>
-<div class="highlight"><pre><span></span>$ vi run_pg.py
-</pre></div>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">psycopg2</span> <span class="kn">import</span> <span class="n">connect</span> <span class="k">as</span> <span class="n">PG</span>
+        <img src="images/spark_download_1.png" alt="Spark Download">
 
+        <p>
+            If you are intalling this on a remote server it may be best to <span class="monospaced">wget</span> it. 
+            Just copy the URL from the download site and use it. Your mirror address may be different:
+        </p>
 
-<span class="n">unique_ips</span> <span class="o">=</span> \
-<span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
- <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;unique_ips&#39;</span><span class="p">,</span> <span class="s1">&#39;r+b&#39;</span><span class="p">)</span>\
-            <span class="o">.</span><span class="n">read</span><span class="p">()</span>\
-            <span class="o">.</span><span class="n">strip</span><span class="p">()</span>\
-            <span class="o">.</span><span class="n">splitlines</span><span class="p">()]</span>
+        <img src="images/spark_download_2.png" alt="Spark Download">
 
-<span class="n">conn</span> <span class="o">=</span> <span class="n">PG</span><span class="p">(</span><span class="n">database</span><span class="o">=</span><span class="s1">&#39;ip_ranges&#39;</span><span class="p">)</span>
-<span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <pre><code class="shell">wget https://apache.dattatec.com/spark/spark-3.0.0/spark-3.0.0-bin-hadoop3.2.tgz</code></pre>
 
-<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;SET enable_seqscan = off;&#39;</span><span class="p">)</span>
-<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
-<span class="s1">    PREPARE find_stub AS</span>
-<span class="s1">        SELECT domain_stub</span>
-<span class="s1">        FROM ip_ranges</span>
-<span class="s1">        WHERE &quot;start&quot; &lt;= $1</span>
-<span class="s1">        AND   &quot;end&quot; &gt;= $1</span>
-<span class="s1">        LIMIT 1;&#39;&#39;&#39;</span><span class="p">)</span>
-<span class="n">sql</span> <span class="o">=</span> <span class="s1">&#39;EXECUTE find_stub(</span><span class="si">%(ip)s</span><span class="s1">);&#39;</span>
+        <p>Then uncompress and rename it (if you want to)</p>
 
-<span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="n">unique_ips</span><span class="p">:</span>
-<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;ip&#39;</span><span class="p">:</span> <span class="n">ip</span><span class="p">})</span>
-<span class="n">resp</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
-<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">resp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <pre><code class="shell">[data@sp3m ~]$ tar xf spark-3.0.0-bin-hadoop3.2.tgz
+[data@sp3m ~]$ mv spark-3.0.0-bin-hadoop3.2.tgz spark</code></pre>
 
-<span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;DEALLOCATE find_stub;&#39;&#39;&#39;</span><span class="p">)</span>
-</pre></div>
-<div class="highlight"><pre><span></span>$ <span class="nb">time</span> python run_pg.py
-</pre></div>
-<p>The above completed in 3 minutes and 41 seconds giving a lookup rate of 16,290/hour.</p>
-</div>
-<div class="section" id="populating-clickhouse">
-<h2>Populating ClickHouse</h2>
-<p>I'll first load the CSV data into a Log Engine table in ClickHouse.</p>
-<div class="highlight"><pre><span></span>$ clickhouse-client
-</pre></div>
-<div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">ip_ranges_log</span> <span class="p">(</span>
-<span class="n">domain_stub</span>  <span class="n">String</span><span class="p">,</span>
-<span class="k">start</span>        <span class="n">UInt32</span><span class="p">,</span>
-<span class="k">end</span>          <span class="n">UInt32</span>
-<span class="p">)</span> <span class="n">ENGINE</span> <span class="o">=</span> <span class="n">Log</span><span class="p">;</span>
-</pre></div>
-<div class="highlight"><pre><span></span>$ cat shrunken.csv <span class="se">\</span>
-<span class="p">|</span> clickhouse-client <span class="se">\</span>
-    --query<span class="o">=</span><span class="s2">&quot;INSERT INTO ip_ranges_log FORMAT CSV&quot;</span>
-</pre></div>
-<p>I'll then produce a MergeTree Engine table which will convert the row-oriented data from the previous table into a form that will be faster to search against. The MergeTree Engine demands a date to partition the data against so I've picked a place holder date of January 1st, 1970.</p>
-<div class="highlight"><pre><span></span>$ clickhouse-client
-</pre></div>
-<div class="highlight"><pre><span></span><span class="k">CREATE</span> <span class="k">TABLE</span> <span class="n">ip_ranges</span>
-<span class="n">ENGINE</span> <span class="o">=</span> <span class="n">MergeTree</span><span class="p">(</span><span class="n">const_date</span><span class="p">,</span> <span class="p">(</span><span class="k">start</span><span class="p">,</span> <span class="k">end</span><span class="p">),</span> <span class="mi">8192</span><span class="p">)</span>
-<span class="k">AS</span> <span class="k">SELECT</span>
-    <span class="n">toDate</span><span class="p">(</span><span class="s1">&#39;1970-01-01&#39;</span><span class="p">)</span> <span class="k">AS</span> <span class="n">const_date</span><span class="p">,</span>
-    <span class="n">domain_stub</span><span class="p">,</span>
-    <span class="k">start</span><span class="p">,</span>
-    <span class="k">end</span>
-   <span class="k">FROM</span> <span class="n">ip_ranges_log</span><span class="p">;</span>
-</pre></div>
-<p>The Log Engine table is 166 MB in ClickHouse's internal format and the MergeTree Engine table is 283 MB.</p>
-<p>I couldn't find an equivalent of PostgreSQL's prepared statements in ClickHouse so the following will simply execute a <tt class="docutils literal">SELECT</tt> statement in full for each and every record.</p>
-<div class="highlight"><pre><span></span>$ vi run_ch.py
-</pre></div>
-<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">clickhouse_driver</span> <span class="kn">import</span> <span class="n">Client</span> <span class="k">as</span> <span class="n">CH</span>
+        <p>
+            Edit <span class="monospaced">"~/.bash_profile"</span> file and add the following lines
+        </p>
 
+        <pre><code class="shell">export SPARK_HOME=/home/data/spark
+export PATH=$SPARK_HOME/bin:$PATH</code></pre>
 
-<span class="n">unique_ips</span> <span class="o">=</span> \
-<span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
- <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;unique_ips&#39;</span><span class="p">,</span> <span class="s1">&#39;r+b&#39;</span><span class="p">)</span>\
-            <span class="o">.</span><span class="n">read</span><span class="p">()</span>\
-            <span class="o">.</span><span class="n">strip</span><span class="p">()</span>\
-            <span class="o">.</span><span class="n">splitlines</span><span class="p">()]</span>
+        <p>
+            Then source the file to get the environment set.
+        </p>
 
-<span class="n">client</span> <span class="o">=</span> <span class="n">CH</span><span class="p">(</span><span class="s1">&#39;localhost&#39;</span><span class="p">,</span>
-        <span class="n">port</span><span class="o">=</span><span class="mi">9000</span><span class="p">,</span>
-        <span class="n">password</span><span class="o">=</span><span class="s1">&#39;root&#39;</span><span class="p">,</span>
-        <span class="n">secure</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-        <span class="n">verify</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-        <span class="n">compression</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <pre><code class="shell">. ~/.bash_profile</code></pre>
 
-<span class="n">sql</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;SELECT domain_stub</span>
-<span class="s1">         FROM ip_ranges</span>
-<span class="s1">         WHERE start &lt;= </span><span class="si">%d</span><span class="s1"></span>
-<span class="s1">         AND end &gt;= </span><span class="si">%d</span><span class="s1"></span>
-<span class="s1">         LIMIT 1&#39;&#39;&#39;</span>
+        <p>
+            Finally lets try to start the Spark Shell
+        </p>
 
-<span class="k">for</span> <span class="n">ip</span> <span class="ow">in</span> <span class="n">unique_ips</span><span class="p">:</span>
-<span class="n">resp</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span> <span class="o">%</span> <span class="p">(</span><span class="n">ip</span><span class="p">,</span> <span class="n">ip</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
-<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">resp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span>
-</pre></div>
-<div class="highlight"><pre><span></span>$ <span class="nb">time</span> python run_ch.py
-</pre></div>
-<p>The above completed in 9.19 seconds giving a lookup rate of just under 392K/hour. This is 24x faster than PostgreSQL.</p>
-</div>
-<div class="section" id="closing-thoughts">
-<h2>Closing Thoughts</h2>
-<p>The performance gap in the hourly lookup rate is off by an order of magnitude. Even if I ran four threads querying PostgreSQL it would still be an order of magnitude off and that's not considering any performance increases that could be seen running the same number of lookup threads with ClickHouse.</p>
-<p>PostgreSQL has Zedstore in development. This is a columnar storage engine that could go some way to speeding up the above queries when it's released. PostgreSQL is a fantastic tool when a dataset can't enforce append-only operations but it would be nice to see if use cases like the above could be optimised further than they already have been.</p>
-<p>If this code above were to ever be used in production a Least Recently Used (LRU) cache on the results from either PostgreSQL or ClickHouse could go a long way to returning subsequent matching records quicker.</p>
-<p>The processing of the source data into a usable form lends itself well to systems with many CPU cores. Using an EC2 spot instance, like the 72-vCPU c5.18xlarge, would be a good choice to process the data quickly while only spending a few dollars to do so. The above instructions would need the four files and process counts expanded to the number of vCPUs on the given machine. I/O might become constrained at some point and should also be taken into consideration.</p>
-<p>The shrinking operation would be a lot quicker if partitioned by the class A of each IPv4 address and run in parallel. Running everything sequentially means it's bottlenecked by the speed of a single CPU core. Also, I suspect ClickHouse could import and sort this data much quicker than SQLite3.</p>
-<p>ClickHouse has standalone client support for feeding JSON in via UNIX Pipes, transforming it using SQL and outputting the results to CSV, Parquet or even native ClickHouse Log Engine format. I suspect a few stages of the data processing above could be removed with a single, albeit more elaborate, ClickHouse stage.</p>
-<p>The Rapid7 database does have gaps in the dataset from unsuccessful lookups. If you're objective is to identify cloud providers then using the IPv4 address lists that have either been crowd-sourced or officially published for <a class="reference external" href="https://docs.aws.amazon.com/general/latest/gr/aws-ip-ranges.html">AWS</a>, <a class="reference external" href="https://github.com/pierrocknroll/googlecloud-iprange">Google Cloud</a> and <a class="reference external" href="https://www.microsoft.com/en-us/download/details.aspx?id=41653">Azure</a> to enrich this dataset will go a long way to achieving a more complete picture of global IPv4 usage.</p>
-<p>Another enrichment could include looking for class C ranges with a lot of gaps and doing a WHOIS on the first IPv4 address. It might announce that a single entity owns the entire class C and therefore all IPs in that range could be marked as such.</p>
-<p>I also noted that there were a lot of small gaps where it may be safe to assume that missing IPv4 addresses between two ranges might be owned by the same entity and could be merged. The following is an example of this:</p>
-<div class="highlight"><pre><span></span>$ grep megaegg shrunken.csv <span class="p">|</span> head
-</pre></div>
-<div class="highlight"><pre><span></span>megaegg,16793601,16793855
-megaegg,16793857,16794111
-megaegg,16794113,16794367
-megaegg,16794369,16794623
-megaegg,16794625,16794879
-megaegg,16794881,16795135
-megaegg,16795137,16795391
-megaegg,16795393,16795647
-megaegg,16795649,16795903
-megaegg,16795905,16796159
-</pre></div>
-<p>I took a look at what sort of reduction could be found merging ranges that shared the same domain name stub and were within 12 IPv4 addresses of one another.</p>
-<div class="highlight"><pre><span></span>$ vi merge_ip_ranges.py
-</pre></div>
-<div class="highlight"><pre><span></span><span class="n">lines</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
-      <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]),</span>
-      <span class="nb">int</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;,&#39;</span><span class="p">)[</span><span class="mi">2</span><span class="p">]))</span>
-     <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;shrunken.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;r+b&#39;</span><span class="p">)</span>\
-                <span class="o">.</span><span class="n">read</span><span class="p">()</span>\
-                <span class="o">.</span><span class="n">strip</span><span class="p">()</span>\
-                <span class="o">.</span><span class="n">lower</span><span class="p">()</span>\
-                <span class="o">.</span><span class="n">splitlines</span><span class="p">()]</span>
+        <pre><code class="shell">[data@sp3m ~]$ spark-shell 
+WARNING: An illegal reflective access operation has occurred
+WARNING: Illegal reflective access by org.apache.spark.unsafe.Platform (file:/home/data/spark/jars/spark-unsafe_2.12-3.0.0.jar) to constructor java.nio.DirectByteBuffer(long,int)
+WARNING: Please consider reporting this to the maintainers of org.apache.spark.unsafe.Platform
+WARNING: Use --illegal-access=warn to enable warnings of further illegal reflective access operations
+WARNING: All illegal access operations will be denied in a future release
+20/06/23 06:48:14 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+Using Spark's default log4j profile: org/apache/spark/log4j-defaults.properties
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+Spark context Web UI available at http://sp3m:4040
+Spark context available as 'sc' (master = local[*], app id = local-1592909310324).
+Spark session available as 'spark'.
+Welcome to
+       ____              __
+      / __/__  ___ _____/ /__
+     _\ \/ _ \/ _ `/ __/  '_/
+    /___/ .__/\_,_/_/ /_/\_\   version 3.0.0
+       /_/
+            
+Using Scala version 2.12.10 (OpenJDK 64-Bit Server VM, Java 11.0.7)
+Type in expressions to have them evaluated.
+Type :help for more information.
 
-<span class="n">banked_first</span> <span class="o">=</span> <span class="bp">None</span>
+scala></code></pre>
 
-<span class="k">for</span> <span class="n">num</span><span class="p">,</span> <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
-<span class="k">if</span> <span class="n">num</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
-    <span class="k">continue</span>
+    <p>
+        Yes! You may want to execute some code just to make sure this puppy can bark.
+        <br>
+        This is a simple example in Scala language. It doesn't matter if you don't know Scala, just copy the lines into
+        the shell and verify you get the same results.
+    </p>
 
-<span class="k">if</span> <span class="n">host</span> <span class="o">==</span> <span class="n">lines</span><span class="p">[</span><span class="n">num</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">lines</span><span class="p">[</span><span class="n">num</span> <span class="o">+</span> <span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">last</span> <span class="o">&lt;</span> <span class="mi">12</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">banked_first</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">banked_first</span> <span class="o">=</span> <span class="n">first</span>
-<span class="k">else</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">banked_first</span><span class="p">:</span>
-        <span class="k">print</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">banked_first</span><span class="p">,</span> <span class="n">last</span><span class="p">)</span>
-        <span class="n">banked_first</span> <span class="o">=</span> <span class="bp">None</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">print</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">,</span><span class="si">%d</span><span class="s1">,</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">last</span><span class="p">)</span>
-</pre></div>
-<p>The result was a reduction of 17,784,359 records down to 4,969,340. This would also produce a database with much wider coverage of the global IPv4 space than the dataset initially offered by Rapid7, although its accuracy would be questionable.</p>
-<p>The above could be simplified further. If you assume that if you don't see any other domain name stubs between two records with matching stubs then the entire space between those two records is owned by the same entity. Here's an example of such a scenario:</p>
-<div class="highlight"><pre><span></span>tepco,16781382,16781392
-tepco,16781419,16781422
-tepco,16781453,16781471
-</pre></div>
-<p>The first two records have 27 IPv4 addresses between them, the second and third have 31 addresses between them. When I removed the 12-IP Address range predicate from the above Python script I was presented with 3,693,710 records.</p>
-<p>Finally, JSON has wide tooling support and many developers understand what it is and how to work with it but for delivery of a billion rows or more it would be nice to see Parquet as one of the delivery formats. Parquet's tooling support has grown immensely in the last few years and manipulating data stored in Parquet is far <a class="reference external" href="faster-clickhouse-imports-csv-parquet-mysql.html#conclusion">more efficient</a> than JSON. There's an argument that a Parquet distributable could come with instructions on converting it into JSON or other formats using open source tooling.</p>
-</div>
+    <pre><code class="scala">scala> val count = sc.parallelize(1 to 1000000).filter { _ => { val x = math.random; val y = math.random; x*x + y*y < 1 } }.count()
+count: Long = 785440
 
+scala> println(s"Pi is roughly ${4.0 * count / 1000000}")
+Pi is roughly 3.14176
+
+scala></code></pre>
+
+    <p>
+        And that's it. You have a funcional Spark node to start working with it.
+    </p>
+
+    </div>
+
+    <div id="p1">
+        [1] As long as it satisfies the minimun requirements. My advice is to use something with 8GB+ RAM to be sure. 
+        I was able to run Spark version 2.4 on a machine with as low as 2GB RAM but had to make changes to memory settings here and there to
+        make it work and even then had some problems. If you want to try and test the product with such a low amount of memory 
+        is fine but you will need to roll up you sleves to make it work. You have been adverted.
+    </div>
+    <div id="p2">
+        [2] You may be wondering why that file and not the other ones available and why the file we are downloading is related to Hadoop.
+        As a matter of fact it does not make much difference unless you are using Hadoop. 
+        If you are not, don't worry, any file you choose will work.
     </div>
 
 
